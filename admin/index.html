@@ -622,6 +622,7 @@
       display: block;
     }
 
+    /* Mejora para móvil: sidebar no tapa el contenido */
     @media (max-width: 768px) {
       .sidebar-toggle {
         display: block;
@@ -639,9 +640,25 @@
         transform: translateX(-100%);
         border-radius: 0;
         overflow-y: auto;
+        background: var(--bg2);
+        padding-top: 70px;
       }
       .sidebar.open {
         transform: translateX(0);
+      }
+      /* Overlay para cerrar al hacer click fuera */
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+      }
+      .sidebar-overlay.active {
+        display: block;
       }
       .form-row {
         grid-template-columns: 1fr;
@@ -665,6 +682,7 @@
 </head>
 <body>
 <button class="sidebar-toggle" id="sidebarToggleBtn">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <div class="container">
   <!-- Login -->
@@ -809,13 +827,14 @@
           <div id="featuredList" class="items-list"></div>
         </div>
 
-        <!-- Categorías -->
+        <!-- Categorías CON PAGINACIÓN -->
         <div id="categoriesPanel" class="panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2>📂 Categorías</h2>
             <button class="btn-primary" id="newCategoryBtn">➕ Nueva categoría</button>
           </div>
           <div id="categoriesList" class="items-list"></div>
+          <div id="categoriesPagination" class="pagination-container"></div>
         </div>
 
         <!-- Marcas -->
@@ -827,7 +846,7 @@
           <div id="brandsList" class="items-list"></div>
         </div>
 
-        <!-- Beneficios -->
+        <!-- Beneficios CON IMAGEN + PREVIEW -->
         <div id="benefitsPanel" class="panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2>✨ Beneficios</h2>
@@ -1204,15 +1223,22 @@
   </div>
 </div>
 
-<!-- Modal Beneficios -->
+<!-- Modal Beneficios CON IMAGEN + PREVIEW -->
 <div id="benefitModal" class="modal">
   <div class="modal-content">
     <h3 id="benefitModalTitle">✨ Nuevo Beneficio</h3>
     <input type="hidden" id="benefitId">
     <div class="form-row">
-      <div><label>Ícono (emoji)</label><input type="text" id="benefitIcon" placeholder="Ej: 🚀" maxlength="2"></div>
+      <div><label>Ícono (emoji) *opcional si usas imagen</label><input type="text" id="benefitIcon" placeholder="Ej: 🚀" maxlength="2"></div>
       <div><label>🔢 Orden</label><input type="number" id="benefitOrder" value="0"></div>
     </div>
+    <label>🖼️ Imagen del beneficio</label>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <input type="url" id="benefitImageUrl" placeholder="https://..." style="flex:1;" onchange="previewBenefitImage()">
+      <button type="button" class="btn-upload" onclick="document.getElementById('benefitImageFile').click()">📁 Subir</button>
+      <input type="file" id="benefitImageFile" accept="image/*" style="display:none;" onchange="uploadImage('benefitImageUrl', this.files[0], 'benefitImagePreview')">
+    </div>
+    <img id="benefitImagePreview" class="image-preview" style="display: none;">
     <label>Título *</label>
     <input type="text" id="benefitTitle" placeholder="Ej: Aumentá tus ventas">
     <label>📝 Descripción</label>
@@ -1275,7 +1301,7 @@ let projectVersions = [];
 
 // Paginación
 let itemsPerPage = 10;
-let projectsPage = 1, servicesPage = 1, storiesPage = 1, leadsPage = 1, benefitsPage = 1, bannersPage = 1, approvedReviewsPage = 1, internalDataPage = 1, versionsPage = 1;
+let projectsPage = 1, servicesPage = 1, storiesPage = 1, leadsPage = 1, benefitsPage = 1, bannersPage = 1, approvedReviewsPage = 1, internalDataPage = 1, versionsPage = 1, categoriesPage = 1;
 
 // Variables para búsqueda de proyectos
 let projectSearchFilters = {
@@ -1382,6 +1408,16 @@ async function uploadImage(inputId, file, previewId) {
 }
 
 // ============================================================
+// FUNCIÓN PREVIEW PARA BENEFICIOS
+// ============================================================
+function previewBenefitImage() { 
+  const url = document.getElementById('benefitImageUrl').value; 
+  const preview = document.getElementById('benefitImagePreview'); 
+  if (url) { preview.src = url; preview.style.display = 'block'; } 
+  else preview.style.display = 'none'; 
+}
+
+// ============================================================
 // FUNCIÓN GUARDAR VERSIÓN DE PROYECTO
 // ============================================================
 async function saveProjectVersion(projectId, actionType, snapshot, notes = '') {
@@ -1485,14 +1521,44 @@ function toggleTheme() {
 document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 initTheme();
 
+// Sidebar mobile mejorado - se cierra solo al seleccionar opción
 const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
 const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function closeSidebar() {
+  if (sidebar) sidebar.classList.remove('open');
+  if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+}
+
+function openSidebar() {
+  if (sidebar) sidebar.classList.add('open');
+  if (sidebarOverlay) sidebarOverlay.classList.add('active');
+}
+
 if (sidebarToggleBtn && sidebar) {
-  sidebarToggleBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== sidebarToggleBtn) {
-      sidebar.classList.remove('open');
+  sidebarToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
     }
+  });
+  
+  // Cerrar sidebar al hacer click fuera
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebar);
+  }
+  
+  // Cerrar sidebar al seleccionar una opción de navegación
+  const navBtnsForSidebar = document.querySelectorAll('.nav-btn');
+  navBtnsForSidebar.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
+    });
   });
 }
 
@@ -1562,10 +1628,6 @@ navBtns.forEach(btn => {
     Object.values(panelMap).forEach(pid => document.getElementById(pid).classList.remove('active'));
     const view = btn.dataset.view;
     document.getElementById(panelMap[view]).classList.add('active');
-    
-    if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
-      sidebar.classList.remove('open');
-    }
     
     if (view === 'services') loadServices();
     if (view === 'projects') loadProjects();
@@ -1782,7 +1844,6 @@ window.deleteService = async function(id) { if(confirm('¿Eliminar este servicio
 // PROYECTOS CON BÚSQUEDA AVANZADA
 // ============================================================
 
-// Cargar categorías en el buscador
 async function loadProjectSearchCategories() {
   const select = document.getElementById('projectSearchCategory');
   if (!select) return;
@@ -1793,7 +1854,6 @@ async function loadProjectSearchCategories() {
   });
 }
 
-// Función mejorada de loadProjects con búsqueda
 async function loadProjects() {
   const container = document.getElementById('projectsList');
   if (!container) return;
@@ -1862,7 +1922,6 @@ async function loadProjects() {
   });
 }
 
-// Función para buscar proyectos
 function searchProjects() {
   projectSearchFilters.title = document.getElementById('projectSearchTitle')?.value || '';
   projectSearchFilters.categoryId = document.getElementById('projectSearchCategory')?.value || '';
@@ -1871,7 +1930,6 @@ function searchProjects() {
   loadProjects();
 }
 
-// Función para limpiar búsqueda
 function clearSearch() {
   if (document.getElementById('projectSearchTitle')) document.getElementById('projectSearchTitle').value = '';
   if (document.getElementById('projectSearchCategory')) document.getElementById('projectSearchCategory').value = '';
@@ -1881,7 +1939,6 @@ function clearSearch() {
   loadProjects();
 }
 
-// Configurar buscador (se ejecutará después de cargar la página)
 function setupSearchListeners() {
   const searchBtn = document.getElementById('searchProjectsBtn');
   const clearBtn = document.getElementById('clearSearchBtn');
@@ -2342,7 +2399,7 @@ window.saveStory = async function() {
 window.deleteStory = async function(id) { if(confirm('¿Eliminar este caso de éxito?')){ await sb.from('success_stories').delete().eq('id',id); loadStories(); loadDashboard(); } }
 
 // ============================================================
-// CATEGORÍAS
+// CATEGORÍAS CON PAGINACIÓN
 // ============================================================
 async function loadCategories() {
   const container = document.getElementById('categoriesList');
@@ -2350,8 +2407,11 @@ async function loadCategories() {
   const { data, error } = await sb.from('categories').select('*').order('order_index', { ascending: true });
   if (error) { container.innerHTML = `<div class="msg msg-error">Error: ${error.message}</div>`; return; }
   categories = data || [];
+  const start = (categoriesPage - 1) * itemsPerPage;
+  const paginated = categories.slice(start, start + itemsPerPage);
   if (categories.length === 0) { container.innerHTML = '<div class="loading">No hay categorías. Creá una nueva.</div>'; return; }
-  container.innerHTML = categories.map(cat => `<div class="item-card"><div class="item-info"><div class="item-title">📁 ${escapeHtml(cat.name)}</div><div class="item-meta">🔗 ${escapeHtml(cat.slug)} · Orden: ${cat.order_index||0} · ${cat.active?'🟢 Activa':'🔴 Inactiva'}</div></div><div class="item-actions"><button class="btn-edit" onclick="openCategoryModal('${cat.id}')">✏️ Editar</button><button class="btn-delete" onclick="deleteCategory('${cat.id}')">🗑️ Eliminar</button></div></div>`).join('');
+  container.innerHTML = paginated.map(cat => `<div class="item-card"><div class="item-info"><div class="item-title">📁 ${escapeHtml(cat.name)}</div><div class="item-meta">🔗 ${escapeHtml(cat.slug)} · Orden: ${cat.order_index||0} · ${cat.active?'🟢 Activa':'🔴 Inactiva'}</div></div><div class="item-actions"><button class="btn-edit" onclick="openCategoryModal('${cat.id}')">✏️ Editar</button><button class="btn-delete" onclick="deleteCategory('${cat.id}')">🗑️ Eliminar</button></div></div>`).join('');
+  renderPagination('categoriesPagination', categories.length, categoriesPage, (page) => { categoriesPage = page; loadCategories(); });
 }
 
 window.openCategoryModal = function(id = null) {
@@ -2437,7 +2497,7 @@ window.saveBrand = async function() {
 window.deleteBrand = async function(id) { if(confirm('¿Eliminar esta marca?')){ await sb.from('trusted_brands').delete().eq('id',id); loadBrands(); loadDashboard(); } }
 
 // ============================================================
-// BENEFICIOS
+// BENEFICIOS CON IMAGEN + PREVIEW
 // ============================================================
 async function loadBenefits() {
   const container = document.getElementById('benefitsList');
@@ -2448,34 +2508,90 @@ async function loadBenefits() {
     if (error) throw error;
     benefits = data || [];
     renderBenefitsList();
-  } catch(e) { container.innerHTML = '<div class="msg msg-error">Error al cargar beneficios</div>'; }
+  } catch(e) { console.error("Error:", e); container.innerHTML = '<div class="msg msg-error">Error al cargar beneficios</div>'; }
 }
+
 function renderBenefitsList() {
   const container = document.getElementById('benefitsList');
   if (!container) return;
   if (benefits.length === 0) { container.innerHTML = '<div class="loading">No hay beneficios. Creá uno nuevo.</div>'; return; }
   const start = (benefitsPage - 1) * itemsPerPage;
   const paginated = benefits.slice(start, start + itemsPerPage);
-  container.innerHTML = paginated.map(b => `<div class="item-card"><div class="item-info"><div class="item-title">${b.icon || '✨'} ${escapeHtml(b.title)}</div><div class="item-meta">${escapeHtml(b.description?.substring(0,80)||'')}${b.description?.length>80?'...':''} · Orden: ${b.order_index||0} · ${b.active?'🟢 Activo':'🔴 Inactivo'}</div></div><div class="item-actions"><button class="btn-edit" onclick="openBenefitModal('${b.id}')">✏️</button><button class="btn-delete" onclick="deleteBenefit('${b.id}')">🗑️</button></div></div>`).join('');
+  container.innerHTML = paginated.map(b => `
+    <div class="item-card">
+      ${b.image_url ? `<img src="${escapeHtml(b.image_url)}" class="item-preview" onerror="this.style.display='none'">` : (b.icon ? `<div style="font-size:32px;">${b.icon}</div>` : '')}
+      <div class="item-info">
+        <div class="item-title">${b.icon || '✨'} ${escapeHtml(b.title)}</div>
+        <div class="item-meta">
+          ${b.image_url ? '🖼️ Con imagen' : '📝 Solo emoji'} · Orden: ${b.order_index||0} · ${b.active?'🟢 Activo':'🔴 Inactivo'}
+        </div>
+        <div class="item-meta">${escapeHtml(b.description?.substring(0,80)||'')}${b.description?.length>80?'...':''}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-edit" onclick="openBenefitModal('${b.id}')">✏️</button>
+        <button class="btn-delete" onclick="deleteBenefit('${b.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
   renderPagination('benefitsPagination', benefits.length, benefitsPage, (page) => { benefitsPage = page; renderBenefitsList(); });
 }
+
 window.openBenefitModal = function(id = null) {
   const modal = document.getElementById('benefitModal');
   document.getElementById('benefitModalTitle').textContent = id ? '✏️ Editar Beneficio' : '➕ Nuevo Beneficio';
   document.getElementById('benefitId').value = id || '';
-  if (id) { const b = benefits.find(x=>x.id==id); if(b){ document.getElementById('benefitIcon').value = b.icon||''; document.getElementById('benefitTitle').value = b.title||''; document.getElementById('benefitDescription').value = b.description||''; document.getElementById('benefitOrder').value = b.order_index||0; document.getElementById('benefitActive').checked = b.active!==false; } }
-  else { document.getElementById('benefitIcon').value=''; document.getElementById('benefitTitle').value=''; document.getElementById('benefitDescription').value=''; document.getElementById('benefitOrder').value='0'; document.getElementById('benefitActive').checked=true; }
-  modal.style.display='flex';
+  if (id) { 
+    const b = benefits.find(x=>x.id==id); 
+    if(b){ 
+      document.getElementById('benefitIcon').value = b.icon || '';
+      document.getElementById('benefitTitle').value = b.title || '';
+      document.getElementById('benefitDescription').value = b.description || '';
+      document.getElementById('benefitOrder').value = b.order_index || 0;
+      document.getElementById('benefitActive').checked = b.active !== false;
+      document.getElementById('benefitImageUrl').value = b.image_url || '';
+      if (b.image_url) {
+        document.getElementById('benefitImagePreview').src = b.image_url;
+        document.getElementById('benefitImagePreview').style.display = 'block';
+      } else {
+        document.getElementById('benefitImagePreview').style.display = 'none';
+      }
+    } 
+  } else { 
+    document.getElementById('benefitIcon').value = '';
+    document.getElementById('benefitTitle').value = '';
+    document.getElementById('benefitDescription').value = '';
+    document.getElementById('benefitOrder').value = '0';
+    document.getElementById('benefitActive').checked = true;
+    document.getElementById('benefitImageUrl').value = '';
+    document.getElementById('benefitImagePreview').style.display = 'none';
+  }
+  modal.style.display = 'flex';
 }
+
 window.saveBenefit = async function() {
   const id = document.getElementById('benefitId').value;
-  const payload = { icon:document.getElementById('benefitIcon').value, title:document.getElementById('benefitTitle').value, description:document.getElementById('benefitDescription').value, order_index:parseInt(document.getElementById('benefitOrder').value)||0, active:document.getElementById('benefitActive').checked, updated_at:new Date().toISOString() };
+  const payload = { 
+    icon: document.getElementById('benefitIcon').value,
+    image_url: document.getElementById('benefitImageUrl').value || null,
+    title: document.getElementById('benefitTitle').value, 
+    description: document.getElementById('benefitDescription').value, 
+    order_index: parseInt(document.getElementById('benefitOrder').value) || 0, 
+    active: document.getElementById('benefitActive').checked, 
+    updated_at: new Date().toISOString() 
+  };
   if (!payload.title) return alert('El título es obligatorio');
   const result = id ? await sb.from('benefits').update(payload).eq('id',id) : await sb.from('benefits').insert([payload]);
   if (result.error) alert('Error: '+result.error.message);
   else { document.getElementById('benefitModal').style.display='none'; loadBenefits(); loadDashboard(); }
 }
-window.deleteBenefit = async function(id) { if(confirm('¿Eliminar este beneficio?')){ const {error}=await sb.from('benefits').delete().eq('id',id); if(error) alert('Error: '+error.message); else { loadBenefits(); loadDashboard(); } } }
+
+window.deleteBenefit = async function(id) { 
+  if(confirm('¿Eliminar este beneficio?')){ 
+    const {error}=await sb.from('benefits').delete().eq('id',id); 
+    if(error) alert('Error: '+error.message); 
+    else { loadBenefits(); loadDashboard(); } 
+  } 
+}
 
 // ============================================================
 // ASISTENTE (PREGUNTAS)
@@ -2759,6 +2875,7 @@ window.previewServiceImage = previewServiceImage;
 window.previewProjectImage = previewProjectImage;
 window.previewBannerImage = previewBannerImage;
 window.previewStoryImage = previewStoryImage;
+window.previewBenefitImage = previewBenefitImage;
 window.approveReview = approveReview;
 window.rejectReview = rejectReview;
 window.deleteApprovedReview = deleteApprovedReview;
@@ -2783,7 +2900,6 @@ async function loadAllData() {
   await loadFaqs();
   await loadVersionsSelect();
   await loadSettings();
-  // Configurar buscador después de cargar todo
   setupSearchListeners();
 }
 
