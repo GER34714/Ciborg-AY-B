@@ -175,16 +175,26 @@
       display: inline-block;
       padding: 0.5rem 1.2rem;
       border-radius: 40px;
-      margin: 1rem 0 1.5rem 0;
+      margin: 1rem 0 0.5rem 0;
       border: 1px solid var(--border);
       font-family: 'JetBrains Mono', monospace;
+    }
+    .precio-info {
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 1.5rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed var(--border);
+      display: inline-block;
+      width: 100%;
     }
     .service-image {
       width: 100%;
       max-height: 400px;
-      object-fit: cover;
+      object-fit: contain;
       border-radius: 24px;
       margin: 1rem 0;
+      background: var(--bg3);
     }
     .service-detail .intro {
       font-size: 1.1rem;
@@ -395,6 +405,56 @@
   };
 
   // ============================================================
+  // FUNCIÓN PARA OBTENER EL PRECIO FORMATEADO (SOLO ARS)
+  // CORREGIDA: maneja números, strings con puntos, y texto "Consultar"
+  // ============================================================
+  function getPrecioMostrar(service) {
+    // 1. Intentar obtener precio_ars (nuevo campo numérico)
+    let precioRaw = service.price_ars;
+    
+    // 2. Si no existe, usar price (campo legacy)
+    if (precioRaw === undefined || precioRaw === null) {
+      precioRaw = service.price;
+    }
+    
+    // 3. Si no hay precio, mostrar "Consultar"
+    if (!precioRaw || precioRaw === "") {
+      return "Consultar";
+    }
+    
+    // 4. Si ya es un texto como "Consultar" u otro, mostrarlo directamente
+    if (typeof precioRaw === "string" && isNaN(parseFloat(precioRaw))) {
+      // Si el texto tiene números con formato ej "700.000" o "700,000"
+      const numerosExtraidos = precioRaw.match(/[\d,.]+/);
+      if (numerosExtraidos) {
+        let numeroLimpio = numerosExtraidos[0].replace(/\./g, '').replace(/,/g, '');
+        if (!isNaN(parseFloat(numeroLimpio))) {
+          return `Desde $${new Intl.NumberFormat('es-AR').format(parseFloat(numeroLimpio))} ARS`;
+        }
+      }
+      // Si no se pudieron extraer números, mostrar el texto original
+      return precioRaw;
+    }
+    
+    // 5. Si es número, formatear
+    let numero = parseFloat(precioRaw);
+    if (!isNaN(numero)) {
+      return `Desde $${new Intl.NumberFormat('es-AR').format(numero)} ARS`;
+    }
+    
+    // 6. Fallback: mostrar como viene
+    return precioRaw;
+    
+    /* ========== CÓDIGO PREPARADO PARA FUTURO USD ==========
+    // Cuando implementes el selector de moneda, podés usar esto:
+    // const mostrarUSD = service.show_usd === true;
+    // if (mostrarUSD && selectorMoneda === 'USD' && service.price_usd) {
+    //   return `Desde $${service.price_usd} USD`;
+    // }
+    ======================================================== */
+  }
+
+  // ============================================================
   // CARGAR SERVICIO DESDE SUPABASE
   // ============================================================
   async function loadServiceFromSupabase(slug) {
@@ -428,7 +488,7 @@
   }
 
   // ============================================================
-  // RENDERIZAR SERVICIO (con botón a beneficios)
+  // RENDERIZAR SERVICIO
   // ============================================================
   function renderService(service) {
     const container = document.getElementById('serviceContent');
@@ -445,7 +505,8 @@
       }
     }
 
-    const whatsappMsg = service.whatsapp_message || `Hola, quiero consultar por el servicio de ${service.title}. Presupuesto desde ${service.price || 'consultar'}`;
+    const precioMostrado = getPrecioMostrar(service);
+    const whatsappMsg = service.whatsapp_message || `Hola, quiero consultar por el servicio de ${service.title}. Presupuesto desde ${precioMostrado}`;
     
     container.innerHTML = `
       <div class="breadcrumb">
@@ -453,20 +514,21 @@
       </div>
       <h1>${escapeHtml(service.title)}</h1>
       ${service.image_url ? `<img src="${escapeHtml(service.image_url)}" class="service-image" alt="${escapeHtml(service.title)}" onerror="this.style.display='none'">` : ''}
-      <div class="precio">💰 ${escapeHtml(service.price || 'Consultar')} ARS</div>
+      <div class="precio">💰 ${precioMostrado}</div>
+      <div class="precio-info">💵 Precios en pesos argentinos. Aceptamos USD transferencia bancaria y Mercado Pago</div>
       <div class="intro">${escapeHtml(service.description || '')}</div>
       <h2>🎯 ¿Para quién es ideal?</h2>
       <p>${escapeHtml(service.ideal_for || 'Emprendedores, pymes y empresas que buscan una solución digital profesional.')}</p>
       <h2>✨ ¿Qué incluye?</h2>
       <ul>${features.map(item => `<li>${escapeHtml(item)}</li>`).join('')}${features.length === 0 ? '<li>Consultar por más detalles</li>' : ''}</ul>
       <div class="action-buttons">
-        <a href="${waUrl(whatsappMsg)}" target="_blank" class="btn btn--wa">Consultar por WhatsApp → ${escapeHtml(service.price || '')}</a>
+        <a href="${waUrl(whatsappMsg)}" target="_blank" class="btn btn--wa">Consultar por WhatsApp → ${precioMostrado}</a>
         <a href="index.html#servicios" class="btn btn-back">← Volver a servicios</a>
         <a href="beneficios.html" class="btn btn--ghost">✨ Ver todos los beneficios</a>
       </div>
     `;
 
-    document.title = `Ciborg 347 — ${service.title} | ${service.price || ''}`;
+    document.title = `Ciborg 347 — ${service.title} | ${precioMostrado}`;
   }
 
   function escapeHtml(str) {
@@ -490,13 +552,15 @@
     
     const waFloat = document.getElementById('waFloat');
     if (waFloat && service) {
-      const whatsappMsg = service.whatsapp_message || `Hola, quiero consultar por el servicio de ${service.title}. Presupuesto desde ${service.price || 'consultar'}`;
+      const precioMostrado = getPrecioMostrar(service);
+      const whatsappMsg = service.whatsapp_message || `Hola, quiero consultar por el servicio de ${service.title}. Presupuesto desde ${precioMostrado}`;
       waFloat.href = waUrl(whatsappMsg);
     }
     
     const mobileWa = document.getElementById('mobileWhatsAppBtn');
     if (mobileWa && service) {
-      const whatsappMsg = service.whatsapp_message || `Hola, quiero consultar por el servicio de ${service.title}. Presupuesto desde ${service.price || 'consultar'}`;
+      const precioMostrado = getPrecioMostrar(service);
+      const whatsappMsg = service.whatsapp_message || `Hola, quiero consultar por el servicio de ${service.title}. Presupuesto desde ${precioMostrado}`;
       mobileWa.href = waUrl(whatsappMsg);
     }
   }
