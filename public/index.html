@@ -279,6 +279,17 @@
     }
     .serviceCard__icon { font-size: 2.5rem; margin-bottom: 1.2rem; display: inline-block; transition: transform 0.3s ease; }
     .serviceCard:hover .serviceCard__icon { transform: scale(1.1); }
+    .serviceCard__image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 16px;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+    .serviceCard:hover .serviceCard__image {
+      transform: scale(1.02);
+    }
     .serviceCard__title {
       font-family: 'Syne', sans-serif;
       font-size: 1.3rem;
@@ -365,6 +376,17 @@
       font-size: 2.8rem;
       margin-bottom: 1rem;
       display: inline-block;
+    }
+    .benefit-card__image {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      margin: 0 auto 1rem auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .benefit-card:hover .benefit-card__image {
+      transform: scale(1.05);
     }
     .benefit-card__title {
       font-family: 'Syne', sans-serif;
@@ -556,7 +578,7 @@
       .stories-grid { grid-template-columns: 1fr; }
     }
 
-    /* ========== CARRUSEL DE BANNERS PROMOCIONALES (CORREGIDO - FLECHAS FUERA) ========== */
+    /* ========== CARRUSEL DE BANNERS PROMOCIONALES ========== */
     .banners-section {
       padding: 60px 0;
     }
@@ -583,13 +605,13 @@
       flex-direction: column;
       background: var(--bg2);
     }
-   .banner-carousel-image {
-  width: 100%;
-  height: auto;        /* ← altura automática, no recorta */
-  object-fit: contain; /* ← muestra la imagen COMPLETA */
-  display: block;
-  background: var(--bg2);
-}
+    .banner-carousel-image {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      background: var(--bg2);
+    }
     .banner-carousel-content {
       padding: 1.8rem 2rem;
       text-align: center;
@@ -622,7 +644,6 @@
       transform: scale(1.05);
       box-shadow: 0 0 15px var(--cyan);
     }
-    /* Flechas FUERA del contenedor - no tapan la imagen */
     .banner-carousel-prev, .banner-carousel-next {
       position: absolute;
       top: 45%;
@@ -654,7 +675,6 @@
     .banner-carousel-next {
       right: -60px;
     }
-    /* Dots */
     .banner-carousel-dots {
       display: flex;
       justify-content: center;
@@ -1862,7 +1882,7 @@ const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("🔌 Conectando a Supabase...");
 
-// ========== FUNCIÓN PARA CARGAR SERVICIOS ==========
+// ========== FUNCIÓN PARA CARGAR SERVICIOS (MODIFICADA CON IMÁGENES) ==========
 async function loadServicesReal() {
   const container = document.getElementById('servicesGrid');
   if (!container) return;
@@ -1901,9 +1921,14 @@ async function loadServicesReal() {
         service.description.substring(0, 100) + (service.description.length > 100 ? '...' : '') : 
         'Solución digital profesional';
       
+      // ✅ NUEVO: Si tiene imagen, la muestra; si no, muestra emoji
+      const imageHtml = service.image_url 
+        ? `<img src="${escapeHtml(service.image_url)}" alt="${escapeHtml(service.title)}" class="serviceCard__image" loading="lazy">`
+        : `<div class="serviceCard__icon">${service.icon || '📦'}</div>`;
+      
       return `
         <div class="serviceCard fade-in-up">
-          <div class="serviceCard__icon">${service.icon || '📦'}</div>
+          ${imageHtml}
           <div class="serviceCard__title">${escapeHtml(service.title)}</div>
           <div class="serviceCard__desc">${escapeHtml(shortDesc)}</div>
           <div class="serviceCard__price">${escapeHtml(price)}</div>
@@ -1912,7 +1937,7 @@ async function loadServicesReal() {
       `;
     }).join('');
     
-    console.log("✅ Servicios cargados desde tabla 'services' con precios reales");
+    console.log("✅ Servicios cargados desde tabla 'services' con imágenes");
     
   } catch(e) { 
     console.error("Error loading services:", e);
@@ -1920,7 +1945,7 @@ async function loadServicesReal() {
   }
 }
 
-// ========== FUNCIÓN PARA CARGAR BENEFICIOS ==========
+// ========== FUNCIÓN PARA CARGAR BENEFICIOS (MODIFICADA: usa Supabase con imágenes) ==========
 async function loadBenefits() {
   const container = document.getElementById('benefitsGrid');
   if (!container) return;
@@ -1928,7 +1953,30 @@ async function loadBenefits() {
   container.innerHTML = '<div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div>';
   
   try {
-    // Beneficios quemados mientras no exista la tabla en Supabase
+    // Intentar cargar desde Supabase (tabla benefits)
+    const { data: benefitsData, error } = await sb
+      .from('benefits')
+      .select('*')
+      .eq('active', true)
+      .order('order_index', { ascending: true });
+    
+    if (!error && benefitsData && benefitsData.length > 0) {
+      // Usar datos de Supabase con imágenes
+      container.innerHTML = benefitsData.map(b => `
+        <div class="benefit-card fade-in-up">
+          ${b.image_url 
+            ? `<img class="benefit-card__image" src="${escapeHtml(b.image_url)}" alt="${escapeHtml(b.title)}" loading="lazy">`
+            : `<div class="benefit-card__icon">${b.icon || '✨'}</div>`
+          }
+          <div class="benefit-card__title">${escapeHtml(b.title)}</div>
+          <div class="benefit-card__desc">${escapeHtml(b.description || '')}</div>
+        </div>
+      `).join('');
+      console.log("✅ Beneficios cargados desde Supabase con imágenes");
+      return;
+    }
+    
+    // Fallback: datos quemados mientras no haya datos en Supabase
     const beneficios = [
       { icon: "🚀", title: "Aumentá tus ventas", description: "Convertí visitantes en clientes con estrategias digitales efectivas." },
       { icon: "⚡", title: "Ahorrá tiempo", description: "Automatizá procesos repetitivos y enfocate en lo que realmente importa." },
@@ -1947,8 +1995,7 @@ async function loadBenefits() {
         <div class="benefit-card__desc">${b.description}</div>
       </div>
     `).join('');
-    
-    console.log("✅ Beneficios cargados");
+    console.log("✅ Beneficios cargados desde fallback (hardcodeado)");
     
   } catch(e) {
     console.error("Error loading benefits:", e);
@@ -1956,7 +2003,7 @@ async function loadBenefits() {
   }
 }
 
-// ========== CARRUSEL DE BANNERS (AUTOMÁTICO - FLECHAS FUERA) ==========
+// ========== CARRUSEL DE BANNERS ==========
 let currentBannerIndex = 0;
 let bannersData = [];
 let bannerInterval = null;
@@ -2010,7 +2057,6 @@ function renderBannerCarousel() {
     return;
   }
   
-  // Renderizar slides con lazy loading
   slidesContainer.innerHTML = bannersData.map(banner => `
     <div class="banner-carousel-slide">
       <img class="banner-carousel-image" src="${escapeHtml(banner.image_url)}" alt="${escapeHtml(banner.title || 'Banner promocional Ciborg 347')}" loading="lazy" width="800" height="450" />
@@ -2022,13 +2068,11 @@ function renderBannerCarousel() {
     </div>
   `).join('');
   
-  // Renderizar dots
   if (dotsContainer && bannersData.length > 1) {
     dotsContainer.innerHTML = bannersData.map((_, i) => `
       <span class="banner-dot ${i === currentBannerIndex ? 'active' : ''}" data-index="${i}" aria-label="Ir al banner ${i+1}"></span>
     `).join('');
     
-    // Evento click en dots
     document.querySelectorAll('.banner-dot').forEach(dot => {
       dot.addEventListener('click', (e) => {
         const index = parseInt(dot.dataset.index);
@@ -2129,7 +2173,6 @@ function mostrarBannersFallbackCarousel() {
   updateBannerCarousel();
 }
 
-// Eventos de navegación manual
 document.getElementById('bannerCarouselPrev')?.addEventListener('click', () => {
   if (bannersData.length > 0) {
     currentBannerIndex = (currentBannerIndex - 1 + bannersData.length) % bannersData.length;
@@ -2150,7 +2193,7 @@ document.getElementById('bannerCarouselNext')?.addEventListener('click', () => {
   resetearCarruselAutomatico();
 });
 
-// ========== RESTO DEL CÓDIGO ORIGINAL ==========
+// ========== RESTO DEL CÓDIGO ORIGINAL (MARCAS, CASOS DE ÉXITO, ETC.) ==========
 let brandsData = [];
 let currentBrandIndex = 0;
 let brandsPerPage = 4;
