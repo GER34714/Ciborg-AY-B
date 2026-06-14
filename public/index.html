@@ -27,7 +27,7 @@
   </script>
   
   <style>
-    /* ========== CSS ORIGINAL (sin cambios) ========== */
+    /* ========== CSS ORIGINAL (con cambios SOLO en object-fit de imágenes) ========== */
     :root {
       --bg: #0a0a0f;
       --bg2: #0f0f1a;
@@ -283,7 +283,8 @@
     .serviceCard__image {
       width: 100%;
       height: 160px;
-      object-fit: cover;
+      object-fit: contain;
+      background-color: var(--bg3);
       border-radius: 16px;
       margin-bottom: 1rem;
       transition: transform 0.3s ease;
@@ -900,7 +901,8 @@
     .featuredCard__image {
       width: 100%;
       aspect-ratio: 16/9;
-      object-fit: cover;
+      object-fit: contain;
+      background-color: var(--bg3);
       display: block;
     }
     .featuredCard__content { padding: 1rem; }
@@ -984,7 +986,8 @@
     .projectCard__image {
       width: 100%;
       aspect-ratio: 16/10;
-      object-fit: cover;
+      object-fit: contain;
+      background-color: var(--bg3);
       display: block;
     }
     .projectCard__content { padding: 1.25rem 1.25rem 1.5rem 1.25rem; }
@@ -1884,7 +1887,7 @@ const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("🔌 Conectando a Supabase...");
 
-// ========== FUNCIÓN PARA CARGAR SERVICIOS (MODIFICADA CON IMÁGENES) ==========
+// ========== FUNCIÓN PARA CARGAR SERVICIOS ==========
 async function loadServicesReal() {
   const container = document.getElementById('servicesGrid');
   if (!container) return;
@@ -1938,12 +1941,11 @@ async function loadServicesReal() {
       `;
     }).join('');
     
-    // ✅ PUNTO 3: Hacer que TODA la card sea clickeable (no solo el botón)
+    // Cards clickeables en toda el área
     document.querySelectorAll('.serviceCard').forEach(card => {
       const url = card.dataset.serviceUrl;
       if (url) {
         card.addEventListener('click', (e) => {
-          // Si el click NO fue en el botón, redirigir
           if (!e.target.closest('.serviceCard__btn')) {
             window.location.href = url;
           }
@@ -1951,7 +1953,7 @@ async function loadServicesReal() {
       }
     });
     
-    console.log("✅ Servicios cargados desde tabla 'services' con imágenes y cards clickeables");
+    console.log("✅ Servicios cargados con imágenes completas y cards clickeables");
     
   } catch(e) { 
     console.error("Error loading services:", e);
@@ -2066,7 +2068,6 @@ function setupSwipeBannerCarousel() {
   const container = document.getElementById('bannerCarouselContainer');
   if (!container) return;
   
-  // ✅ PUNTO 4: Swipe táctil para el carrusel de banners
   container.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
   }, { passive: true });
@@ -2078,7 +2079,6 @@ function setupSwipeBannerCarousel() {
     
     if (Math.abs(swipeDistance) > minSwipeDistance) {
       if (swipeDistance > 0) {
-        // Swipe hacia la izquierda → siguiente banner
         if (bannersData.length > 0) {
           currentBannerIndex = (currentBannerIndex + 1) % bannersData.length;
         } else {
@@ -2087,7 +2087,6 @@ function setupSwipeBannerCarousel() {
         updateBannerCarousel();
         resetearCarruselAutomatico();
       } else {
-        // Swipe hacia la derecha → banner anterior
         if (bannersData.length > 0) {
           currentBannerIndex = (currentBannerIndex - 1 + bannersData.length) % bannersData.length;
         } else {
@@ -2246,7 +2245,7 @@ document.getElementById('bannerCarouselNext')?.addEventListener('click', () => {
   resetearCarruselAutomatico();
 });
 
-// ========== RESTO DEL CÓDIGO ORIGINAL (MARCAS, CASOS DE ÉXITO, ETC.) ==========
+// ========== RESTO DEL CÓDIGO ORIGINAL ==========
 let brandsData = [];
 let currentBrandIndex = 0;
 let brandsPerPage = 4;
