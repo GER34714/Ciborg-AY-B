@@ -27,7 +27,7 @@
   </script>
   
   <style>
-    /* ========== CSS ORIGINAL (con cambios SOLO en object-fit de imágenes) ========== */
+    /* ========== CSS ORIGINAL (sin modificar) ========== */
     :root {
       --bg: #0a0a0f;
       --bg2: #0f0f1a;
@@ -1887,7 +1887,55 @@ const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("🔌 Conectando a Supabase...");
 
-// ========== FUNCIÓN PARA CARGAR SERVICIOS ==========
+// ========== FUNCIÓN PARA FORMATEAR PRECIOS (CORREGIDA - CON "Desde") ==========
+// Soporta price_ars (nuevo), price (legacy), números, strings con formato "700.000" y texto "Consultar"
+function getPrecioMostrar(service) {
+  // 1. Intentar obtener price_ars (nuevo campo numérico)
+  let precioRaw = service.price_ars;
+  
+  // 2. Si no existe, usar price (campo legacy)
+  if (precioRaw === undefined || precioRaw === null) {
+    precioRaw = service.price;
+  }
+  
+  // 3. Si no hay precio, mostrar "Consultar"
+  if (!precioRaw || precioRaw === "") {
+    return "Consultar";
+  }
+  
+  // 4. Si ya es un texto como "Consultar" u otro, mostrarlo directamente
+  if (typeof precioRaw === "string" && isNaN(parseFloat(precioRaw))) {
+    // Si el texto tiene números con formato ej "700.000" o "700,000"
+    const numerosExtraidos = precioRaw.match(/[\d,.]+/);
+    if (numerosExtraidos) {
+      let numeroLimpio = numerosExtraidos[0].replace(/\./g, '').replace(/,/g, '');
+      if (!isNaN(parseFloat(numeroLimpio))) {
+        return `Desde $${new Intl.NumberFormat('es-AR').format(parseFloat(numeroLimpio))} ARS`;
+      }
+    }
+    // Si no se pudieron extraer números, mostrar el texto original
+    return precioRaw;
+  }
+  
+  // 5. Si es número, formatear (CORREGIDO: agrega "Desde")
+  let numero = parseFloat(precioRaw);
+  if (!isNaN(numero)) {
+    return `Desde $${new Intl.NumberFormat('es-AR').format(numero)} ARS`;
+  }
+  
+  // 6. Fallback: mostrar como viene
+  return precioRaw;
+  
+  /* ========== CÓDIGO PREPARADO PARA FUTURO USD ==========
+  // Cuando implementes el selector de moneda, podés usar esto:
+  // const mostrarUSD = service.show_usd === true;
+  // if (mostrarUSD && selectorMoneda === 'USD' && service.price_usd) {
+  //   return `Desde $${service.price_usd} USD`;
+  // }
+  ======================================================== */
+}
+
+// ========== FUNCIÓN PARA CARGAR SERVICIOS (MODIFICADA - usa getPrecioMostrar) ==========
 async function loadServicesReal() {
   const container = document.getElementById('servicesGrid');
   if (!container) return;
@@ -1921,7 +1969,8 @@ async function loadServicesReal() {
       let serviceSlug = service.slug;
       if (slugMap[serviceSlug]) serviceSlug = slugMap[serviceSlug];
       
-      const price = service.price || 'Consultar';
+      // PRECIO: usa la nueva función getPrecioMostrar (con "Desde")
+      const priceFormatted = getPrecioMostrar(service);
       const shortDesc = service.description ? 
         service.description.substring(0, 100) + (service.description.length > 100 ? '...' : '') : 
         'Solución digital profesional';
@@ -1935,7 +1984,7 @@ async function loadServicesReal() {
           ${imageHtml}
           <div class="serviceCard__title">${escapeHtml(service.title)}</div>
           <div class="serviceCard__desc">${escapeHtml(shortDesc)}</div>
-          <div class="serviceCard__price">${escapeHtml(price)}</div>
+          <div class="serviceCard__price">${escapeHtml(priceFormatted)}</div>
           <a href="servicio.html?tipo=${serviceSlug}" class="serviceCard__btn">Ver más →</a>
         </div>
       `;
@@ -1953,7 +2002,7 @@ async function loadServicesReal() {
       }
     });
     
-    console.log("✅ Servicios cargados con imágenes completas y cards clickeables");
+    console.log("✅ Servicios cargados con imágenes completas, cards clickeables y precios formateados con 'Desde'");
     
   } catch(e) { 
     console.error("Error loading services:", e);
@@ -2245,7 +2294,7 @@ document.getElementById('bannerCarouselNext')?.addEventListener('click', () => {
   resetearCarruselAutomatico();
 });
 
-// ========== RESTO DEL CÓDIGO ORIGINAL ==========
+// ========== RESTO DEL CÓDIGO ORIGINAL (sin modificar) ==========
 let brandsData = [];
 let currentBrandIndex = 0;
 let brandsPerPage = 4;
