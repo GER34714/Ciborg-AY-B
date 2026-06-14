@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Admin | CIBORG 347</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
   <style>
     * {
       margin: 0;
@@ -728,12 +729,45 @@
           <div id="recentProjects" class="items-list"></div>
         </div>
 
-        <!-- Proyectos -->
+        <!-- Proyectos CON BUSCADOR -->
         <div id="projectsPanel" class="panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2>📁 Proyectos</h2>
             <button class="btn-primary" id="newProjectBtn">➕ Nuevo proyecto</button>
           </div>
+
+          <!-- BUSCADOR AVANZADO -->
+          <div style="margin-bottom: 20px; padding: 15px; background: var(--bg3); border-radius: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+              <div style="flex: 2; min-width: 180px;">
+                <label style="font-size: 12px;">🔍 Buscar por título</label>
+                <input type="text" id="projectSearchTitle" placeholder="Ej: Tienda, Web..." style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border); color: var(--text);">
+              </div>
+              <div style="flex: 1; min-width: 140px;">
+                <label style="font-size: 12px;">📂 Categoría</label>
+                <select id="projectSearchCategory" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border); color: var(--text);">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div style="flex: 1; min-width: 140px;">
+                <label style="font-size: 12px;">📌 Estado</label>
+                <select id="projectSearchStatus" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border); color: var(--text);">
+                  <option value="">Todos</option>
+                  <option value="published">✅ Publicado</option>
+                  <option value="draft">📝 Borrador</option>
+                  <option value="featured">⭐ Destacado</option>
+                  <option value="paused">⏸️ Pausado</option>
+                  <option value="archived">📦 Archivado</option>
+                </select>
+              </div>
+              <div>
+                <button id="searchProjectsBtn" class="btn-primary" style="padding: 10px 20px;">🔍 Buscar</button>
+                <button id="clearSearchBtn" class="btn-secondary" style="padding: 10px 20px;">🗑️ Limpiar</button>
+              </div>
+            </div>
+            <div id="searchStats" style="margin-top: 10px; font-size: 12px; color: var(--text2);"></div>
+          </div>
+
           <div id="projectsList" class="items-list"></div>
           <div id="projectsPagination" class="pagination-container"></div>
         </div>
@@ -1022,7 +1056,7 @@
   </div>
 </div>
 
-<!-- Modal Banners (CORREGIDO) -->
+<!-- Modal Banners -->
 <div id="bannerModal" class="modal">
   <div class="modal-content">
     <h3 id="bannerModalTitle">📢 Nuevo Banner</h3>
@@ -1243,8 +1277,15 @@ let projectVersions = [];
 let itemsPerPage = 10;
 let projectsPage = 1, servicesPage = 1, storiesPage = 1, leadsPage = 1, benefitsPage = 1, bannersPage = 1, approvedReviewsPage = 1, internalDataPage = 1, versionsPage = 1;
 
+// Variables para búsqueda de proyectos
+let projectSearchFilters = {
+  title: '',
+  categoryId: '',
+  status: ''
+};
+
 // ============================================================
-// FUNCIÓN SUBIR IMAGEN A SUPABASE STORAGE (MEJORADA)
+// FUNCIÓN SUBIR IMAGEN COMPRIMIDA A SUPABASE STORAGE
 // ============================================================
 async function uploadImage(inputId, file, previewId) {
   if (!file) {
@@ -1252,39 +1293,62 @@ async function uploadImage(inputId, file, previewId) {
     return;
   }
   
-  // Validar tipo de archivo
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
   if (!allowedTypes.includes(file.type)) {
     alert("❌ Solo se permiten imágenes (JPEG, PNG, WEBP, GIF)");
     return;
   }
   
-  // Validar tamaño (máximo 5MB)
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
     alert("❌ La imagen no puede superar los 5MB");
     return;
   }
   
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-  const filePath = `${fileName}`;
+  let btn = null;
+  let originalBtnText = null;
+  if (event && event.target) {
+    btn = event.target;
+    originalBtnText = btn.innerText;
+    btn.innerText = "🔄 Comprimiendo...";
+    btn.disabled = true;
+  }
   
   try {
-    const { data, error } = await sb.storage.from(STORAGE_BUCKET).upload(filePath, file, {
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      initialQuality: 0.85,
+      fileType: file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+    };
+    
+    let compressedFile;
+    try {
+      compressedFile = await imageCompression(file, options);
+    } catch (compressError) {
+      console.warn("Error comprimiendo, usando original:", compressError);
+      compressedFile = file;
+    }
+    
+    if (compressedFile.size > 2 * 1024 * 1024) {
+      const aggressiveOptions = { ...options, maxSizeMB: 0.3, initialQuality: 0.7 };
+      compressedFile = await imageCompression(file, aggressiveOptions);
+    }
+    
+    const fileExt = compressedFile.type.split('/')[1] || 'jpg';
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 10)}.${fileExt}`;
+    const filePath = `${fileName}`;
+    
+    const { data, error } = await sb.storage.from(STORAGE_BUCKET).upload(filePath, compressedFile, {
       cacheControl: '3600',
-      upsert: false
+      upsert: false,
+      contentType: compressedFile.type
     });
     
     if (error) {
-      console.error("Error subiendo imagen:", error);
-      if (error.message.includes("row-level security policy")) {
-        alert("❌ Error de permisos en Storage.\n\nSolución: Ve a Supabase > Storage > Imagenes > Policies y agrega políticas de INSERT/SELECT para usuarios autenticados.");
-      } else if (error.message.includes("bucket not found")) {
-        alert("❌ El bucket 'Imagenes' no existe. Créalo en Supabase Storage.");
-      } else {
-        alert("Error al subir la imagen: " + error.message);
-      }
+      console.error("Error subiendo:", error);
+      alert("Error al subir: " + error.message);
       return;
     }
     
@@ -1301,10 +1365,19 @@ async function uploadImage(inputId, file, previewId) {
       }
     }
     
-    alert("✅ Imagen subida correctamente");
+    const originalKB = (file.size / 1024).toFixed(1);
+    const compressedKB = (compressedFile.size / 1024).toFixed(1);
+    const saved = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
+    alert(`✅ Imagen subida!\n📦 ${originalKB}KB → ${compressedKB}KB (ahorro ${saved}%)`);
+    
   } catch (err) {
-    console.error("Error inesperado:", err);
-    alert("Error inesperado: " + err.message);
+    console.error("Error:", err);
+    alert("❌ Error: " + err.message);
+  } finally {
+    if (btn) {
+      btn.innerText = originalBtnText || "📁 Subir";
+      btn.disabled = false;
+    }
   }
 }
 
@@ -1490,7 +1563,6 @@ navBtns.forEach(btn => {
     const view = btn.dataset.view;
     document.getElementById(panelMap[view]).classList.add('active');
     
-    // Cerrar sidebar en móvil después de seleccionar una opción
     if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
       sidebar.classList.remove('open');
     }
@@ -1707,19 +1779,123 @@ window.saveService = async function() {
 window.deleteService = async function(id) { if(confirm('¿Eliminar este servicio?')){ await sb.from('services').delete().eq('id',id); loadServices(); loadDashboard(); } }
 
 // ============================================================
-// PROYECTOS (Frontend - SIN BOTON VERSIONES)
+// PROYECTOS CON BÚSQUEDA AVANZADA
 // ============================================================
+
+// Cargar categorías en el buscador
+async function loadProjectSearchCategories() {
+  const select = document.getElementById('projectSearchCategory');
+  if (!select) return;
+  const { data } = await sb.from('categories').select('id, name').eq('active', true);
+  select.innerHTML = '<option value="">Todas</option>';
+  data?.forEach(cat => {
+    select.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`;
+  });
+}
+
+// Función mejorada de loadProjects con búsqueda
 async function loadProjects() {
   const container = document.getElementById('projectsList');
+  if (!container) return;
   container.innerHTML = '<div class="loading">Cargando proyectos...</div>';
-  const { data, error } = await sb.from('projects').select('*, categories(name)').order('order_index', { ascending: true });
-  if (error) { container.innerHTML = `<div class="msg msg-error">Error: ${error.message}</div>`; return; }
+  
+  let query = sb.from('projects').select('*, categories(name)');
+  
+  if (projectSearchFilters.title) {
+    query = query.ilike('title', `%${projectSearchFilters.title}%`);
+  }
+  if (projectSearchFilters.categoryId) {
+    query = query.eq('category_id', projectSearchFilters.categoryId);
+  }
+  if (projectSearchFilters.status) {
+    query = query.eq('status', projectSearchFilters.status);
+  }
+  
+  const { data, error } = await query.order('order_index', { ascending: true });
+  
+  if (error) { 
+    container.innerHTML = `<div class="msg msg-error">Error: ${error.message}</div>`; 
+    return; 
+  }
+  
   projects = data || [];
+  
+  const searchStats = document.getElementById('searchStats');
+  if (searchStats) {
+    const filtersActive = projectSearchFilters.title || projectSearchFilters.categoryId || projectSearchFilters.status;
+    if (filtersActive) {
+      searchStats.innerHTML = `📊 Resultados: ${projects.length} proyecto${projects.length !== 1 ? 's' : ''} encontrados`;
+    } else {
+      searchStats.innerHTML = `📊 Total: ${projects.length} proyectos`;
+    }
+  }
+  
   const start = (projectsPage - 1) * itemsPerPage;
   const paginated = projects.slice(start, start + itemsPerPage);
-  if (projects.length === 0) { container.innerHTML = '<div class="loading">No hay proyectos. Creá uno nuevo.</div>'; return; }
-  container.innerHTML = paginated.map(project => `<div class="item-card">${project.image_url ? `<img src="${escapeHtml(project.image_url)}" class="item-preview" onerror="this.style.display='none'">` : ''}<div class="item-info"><div class="item-title">${escapeHtml(project.title)}</div><div class="item-meta">📁 ${escapeHtml(project.categories?.name || 'Sin categoría')} · ${getStatusBadge(project.status)} ${project.featured ? '⭐ Destacado' : ''}</div></div><div class="item-actions"><button class="btn-edit" onclick="openProjectModal('${project.id}')">✏️ Editar</button><button class="btn-delete" onclick="deleteProject('${project.id}')">🗑️ Eliminar</button></div></div>`).join('');
-  renderPagination('projectsPagination', projects.length, projectsPage, (page) => { projectsPage = page; loadProjects(); });
+  
+  if (projects.length === 0) { 
+    container.innerHTML = '<div class="loading">🔍 No se encontraron proyectos con esos filtros.</div>'; 
+    return; 
+  }
+  
+  container.innerHTML = paginated.map(project => `
+    <div class="item-card">
+      ${project.image_url ? `<img src="${escapeHtml(project.image_url)}" class="item-preview" onerror="this.style.display='none'">` : ''}
+      <div class="item-info">
+        <div class="item-title">${escapeHtml(project.title)}</div>
+        <div class="item-meta">
+          📁 ${escapeHtml(project.categories?.name || 'Sin categoría')} · 
+          ${getStatusBadge(project.status)} 
+          ${project.featured ? '⭐ Destacado' : ''}
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-edit" onclick="openProjectModal('${project.id}')">✏️ Editar</button>
+        <button class="btn-delete" onclick="deleteProject('${project.id}')">🗑️ Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+  
+  renderPagination('projectsPagination', projects.length, projectsPage, (page) => { 
+    projectsPage = page; 
+    loadProjects(); 
+  });
+}
+
+// Función para buscar proyectos
+function searchProjects() {
+  projectSearchFilters.title = document.getElementById('projectSearchTitle')?.value || '';
+  projectSearchFilters.categoryId = document.getElementById('projectSearchCategory')?.value || '';
+  projectSearchFilters.status = document.getElementById('projectSearchStatus')?.value || '';
+  projectsPage = 1;
+  loadProjects();
+}
+
+// Función para limpiar búsqueda
+function clearSearch() {
+  if (document.getElementById('projectSearchTitle')) document.getElementById('projectSearchTitle').value = '';
+  if (document.getElementById('projectSearchCategory')) document.getElementById('projectSearchCategory').value = '';
+  if (document.getElementById('projectSearchStatus')) document.getElementById('projectSearchStatus').value = '';
+  projectSearchFilters = { title: '', categoryId: '', status: '' };
+  projectsPage = 1;
+  loadProjects();
+}
+
+// Configurar buscador (se ejecutará después de cargar la página)
+function setupSearchListeners() {
+  const searchBtn = document.getElementById('searchProjectsBtn');
+  const clearBtn = document.getElementById('clearSearchBtn');
+  const searchInput = document.getElementById('projectSearchTitle');
+  
+  if (searchBtn) searchBtn.onclick = searchProjects;
+  if (clearBtn) clearBtn.onclick = clearSearch;
+  if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchProjects();
+    });
+  }
+  
+  loadProjectSearchCategories();
 }
 
 window.editProject = function(id) { openProjectModal(id); }
@@ -1879,7 +2055,7 @@ window.saveInternalData = async function() {
 }
 
 // ============================================================
-// BANNERS (CORREGIDO - Usa los nombres de columna correctos)
+// BANNERS
 // ============================================================
 async function loadBanners() {
   const container = document.getElementById('bannersList');
@@ -1937,7 +2113,6 @@ window.openBannerModal = function(id = null) {
   document.getElementById('bannerModalTitle').textContent = id ? '✏️ Editar Banner' : '➕ Nuevo Banner';
   document.getElementById('bannerId').value = id || '';
   
-  // Resetear valores por defecto
   document.getElementById('bannerTitle').value = '';
   document.getElementById('bannerImageUrl').value = '';
   document.getElementById('bannerDescription').value = '';
@@ -1957,7 +2132,6 @@ window.openBannerModal = function(id = null) {
       document.getElementById('bannerTitle').value = b.title || '';
       document.getElementById('bannerImageUrl').value = b.image_url || '';
       document.getElementById('bannerDescription').value = b.description || '';
-      // Usar button_text o btn_text como fallback
       document.getElementById('bannerBtnText').value = b.button_text || b.btn_text || 'Ver más';
       document.getElementById('bannerBtnUrl').value = b.button_link || b.btn_url || '#';
       document.getElementById('bannerOrder').value = b.order_index || 0;
@@ -1984,13 +2158,12 @@ window.saveBanner = async function() {
     return;
   }
   
-  // Usar los nombres de columna correctos para tu base de datos
   const payload = {
     title: document.getElementById('bannerTitle').value || 'Sin título',
     image_url: imageUrl,
     description: document.getElementById('bannerDescription').value || '',
-    button_text: document.getElementById('bannerBtnText').value || 'Ver más',  // ← button_text
-    button_link: document.getElementById('bannerBtnUrl').value || '#',        // ← button_link
+    button_text: document.getElementById('bannerBtnText').value || 'Ver más',
+    button_link: document.getElementById('bannerBtnUrl').value || '#',
     order_index: parseInt(document.getElementById('bannerOrder').value) || 0,
     active: document.getElementById('bannerActive').checked,
     bg_color: document.getElementById('bannerBgColor').value,
@@ -2000,7 +2173,6 @@ window.saveBanner = async function() {
     updated_at: new Date().toISOString()
   };
   
-  // También incluir btn_text y btn_url para compatibilidad con código existente
   payload.btn_text = payload.button_text;
   payload.btn_url = payload.button_link;
   
@@ -2611,6 +2783,8 @@ async function loadAllData() {
   await loadFaqs();
   await loadVersionsSelect();
   await loadSettings();
+  // Configurar buscador después de cargar todo
+  setupSearchListeners();
 }
 
 checkSession();
