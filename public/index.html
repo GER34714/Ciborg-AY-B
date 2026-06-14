@@ -270,6 +270,7 @@
       transition: all 0.4s ease;
       border: 1px solid var(--border);
       text-align: center;
+      cursor: pointer;
     }
     .serviceCard:hover {
       background: var(--bg3);
@@ -594,6 +595,7 @@
       border-radius: 24px;
       background: var(--bg2);
       border: 1px solid var(--border);
+      touch-action: pan-y pinch-zoom;
     }
     .banner-carousel-slides {
       display: flex;
@@ -1921,13 +1923,12 @@ async function loadServicesReal() {
         service.description.substring(0, 100) + (service.description.length > 100 ? '...' : '') : 
         'Solución digital profesional';
       
-      // ✅ NUEVO: Si tiene imagen, la muestra; si no, muestra emoji
       const imageHtml = service.image_url 
         ? `<img src="${escapeHtml(service.image_url)}" alt="${escapeHtml(service.title)}" class="serviceCard__image" loading="lazy">`
         : `<div class="serviceCard__icon">${service.icon || '📦'}</div>`;
       
       return `
-        <div class="serviceCard fade-in-up">
+        <div class="serviceCard fade-in-up" data-service-url="servicio.html?tipo=${serviceSlug}">
           ${imageHtml}
           <div class="serviceCard__title">${escapeHtml(service.title)}</div>
           <div class="serviceCard__desc">${escapeHtml(shortDesc)}</div>
@@ -1937,7 +1938,20 @@ async function loadServicesReal() {
       `;
     }).join('');
     
-    console.log("✅ Servicios cargados desde tabla 'services' con imágenes");
+    // ✅ PUNTO 3: Hacer que TODA la card sea clickeable (no solo el botón)
+    document.querySelectorAll('.serviceCard').forEach(card => {
+      const url = card.dataset.serviceUrl;
+      if (url) {
+        card.addEventListener('click', (e) => {
+          // Si el click NO fue en el botón, redirigir
+          if (!e.target.closest('.serviceCard__btn')) {
+            window.location.href = url;
+          }
+        });
+      }
+    });
+    
+    console.log("✅ Servicios cargados desde tabla 'services' con imágenes y cards clickeables");
     
   } catch(e) { 
     console.error("Error loading services:", e);
@@ -1945,7 +1959,7 @@ async function loadServicesReal() {
   }
 }
 
-// ========== FUNCIÓN PARA CARGAR BENEFICIOS (MODIFICADA: usa Supabase con imágenes) ==========
+// ========== FUNCIÓN PARA CARGAR BENEFICIOS ==========
 async function loadBenefits() {
   const container = document.getElementById('benefitsGrid');
   if (!container) return;
@@ -1953,7 +1967,6 @@ async function loadBenefits() {
   container.innerHTML = '<div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div>';
   
   try {
-    // Intentar cargar desde Supabase (tabla benefits)
     const { data: benefitsData, error } = await sb
       .from('benefits')
       .select('*')
@@ -1961,7 +1974,6 @@ async function loadBenefits() {
       .order('order_index', { ascending: true });
     
     if (!error && benefitsData && benefitsData.length > 0) {
-      // Usar datos de Supabase con imágenes
       container.innerHTML = benefitsData.map(b => `
         <div class="benefit-card fade-in-up">
           ${b.image_url 
@@ -1976,7 +1988,6 @@ async function loadBenefits() {
       return;
     }
     
-    // Fallback: datos quemados mientras no haya datos en Supabase
     const beneficios = [
       { icon: "🚀", title: "Aumentá tus ventas", description: "Convertí visitantes en clientes con estrategias digitales efectivas." },
       { icon: "⚡", title: "Ahorrá tiempo", description: "Automatizá procesos repetitivos y enfocate en lo que realmente importa." },
@@ -1995,7 +2006,7 @@ async function loadBenefits() {
         <div class="benefit-card__desc">${b.description}</div>
       </div>
     `).join('');
-    console.log("✅ Beneficios cargados desde fallback (hardcodeado)");
+    console.log("✅ Beneficios cargados desde fallback");
     
   } catch(e) {
     console.error("Error loading benefits:", e);
@@ -2003,10 +2014,12 @@ async function loadBenefits() {
   }
 }
 
-// ========== CARRUSEL DE BANNERS ==========
+// ========== CARRUSEL DE BANNERS CON SWIPE TÁCTIL ==========
 let currentBannerIndex = 0;
 let bannersData = [];
 let bannerInterval = null;
+let touchStartX = 0;
+let touchEndX = 0;
 
 async function loadBannersCarousel() {
   const container = document.getElementById('bannerCarouselSlides');
@@ -2040,11 +2053,51 @@ async function loadBannersCarousel() {
     
     renderBannerCarousel();
     iniciarCarruselAutomatico();
+    setupSwipeBannerCarousel();
     
   } catch(e) {
     console.error("❌ Error cargando banners:", e);
     mostrarBannersFallbackCarousel();
+    setupSwipeBannerCarousel();
   }
+}
+
+function setupSwipeBannerCarousel() {
+  const container = document.getElementById('bannerCarouselContainer');
+  if (!container) return;
+  
+  // ✅ PUNTO 4: Swipe táctil para el carrusel de banners
+  container.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  
+  container.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const swipeDistance = touchStartX - touchEndX;
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(swipeDistance) > minSwipeDistance) {
+      if (swipeDistance > 0) {
+        // Swipe hacia la izquierda → siguiente banner
+        if (bannersData.length > 0) {
+          currentBannerIndex = (currentBannerIndex + 1) % bannersData.length;
+        } else {
+          currentBannerIndex = (currentBannerIndex + 1) % 2;
+        }
+        updateBannerCarousel();
+        resetearCarruselAutomatico();
+      } else {
+        // Swipe hacia la derecha → banner anterior
+        if (bannersData.length > 0) {
+          currentBannerIndex = (currentBannerIndex - 1 + bannersData.length) % bannersData.length;
+        } else {
+          currentBannerIndex = (currentBannerIndex - 1 + 2) % 2;
+        }
+        updateBannerCarousel();
+        resetearCarruselAutomatico();
+      }
+    }
+  }, { passive: true });
 }
 
 function renderBannerCarousel() {
@@ -2109,7 +2162,6 @@ function updateBannerCarousel() {
 
 function iniciarCarruselAutomatico() {
   if (bannerInterval) clearInterval(bannerInterval);
-  
   if (bannersData.length <= 1) return;
   
   bannerInterval = setInterval(() => {
@@ -2171,6 +2223,7 @@ function mostrarBannersFallbackCarousel() {
   bannersData = [];
   currentBannerIndex = 0;
   updateBannerCarousel();
+  setupSwipeBannerCarousel();
 }
 
 document.getElementById('bannerCarouselPrev')?.addEventListener('click', () => {
