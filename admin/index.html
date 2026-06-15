@@ -624,6 +624,81 @@
       background-color: white;
     }
 
+    /* Beneficios editor */
+    .benefits-editor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .benefit-editor-card {
+      background: var(--bg3);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .benefit-editor-card:hover {
+      border-color: var(--cyan);
+    }
+
+    .benefit-editor-fields {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .benefit-editor-fields input,
+    .benefit-editor-fields textarea {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .benefit-editor-fields input {
+      font-weight: 600;
+    }
+
+    .benefit-editor-fields textarea {
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    .benefit-editor-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-remove-benefit {
+      background: var(--danger);
+      color: white;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .btn-move-benefit {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-move-benefit:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
     @media (max-width: 768px) {
       .sidebar-toggle {
         display: block;
@@ -727,6 +802,7 @@
         <button class="nav-btn" data-view="services">💰 Servicios</button>
         <button class="nav-btn" data-view="success-stories">🏆 Casos de éxito</button>
         <button class="nav-btn" data-view="benefits">✨ Beneficios</button>
+        <button class="nav-btn" data-view="serviceBenefits">🎯 Beneficios por Servicio</button>
 
         <h3>👥 Clientes</h3>
         <button class="nav-btn" data-view="leads" id="leadsNavBtn">📋 Leads</button>
@@ -862,6 +938,42 @@
           </div>
           <div id="bannersList" class="items-list"></div>
           <div id="bannersPagination" class="pagination-container"></div>
+        </div>
+
+        <!-- Beneficios por Servicio (NUEVO) -->
+        <div id="serviceBenefitsPanel" class="panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h2>🎯 Beneficios exclusivos por servicio</h2>
+            <p style="color: var(--text2); font-size: 12px;">Administrá los beneficios que se muestran en la página /beneficios.html</p>
+          </div>
+          
+          <div class="form-row">
+            <div style="flex: 1;">
+              <label>📁 Seleccionar servicio</label>
+              <select id="serviceBenefitSelect" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--border); color: var(--text);">
+                <option value="">-- Seleccionar servicio --</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="serviceBenefitsEditor" style="margin-top: 30px; display: none;">
+            <hr style="margin: 20px 0; border-color: var(--border);">
+            
+            <h3 style="margin-bottom: 20px;">✨ Beneficios generales (se muestran para todos los servicios)</h3>
+            <div id="generalBenefitsList" class="benefits-editor-list"></div>
+            <button id="addGeneralBenefitBtn" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 12px;">➕ Agregar beneficio general</button>
+            
+            <hr style="margin: 30px 0; border-color: var(--border);">
+            
+            <h3 style="margin-bottom: 20px;">🎯 Beneficios exclusivos de <span id="currentServiceName"></span></h3>
+            <div id="exclusiveBenefitsList" class="benefits-editor-list"></div>
+            <button id="addExclusiveBenefitBtn" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 12px;">➕ Agregar beneficio exclusivo</button>
+            
+            <div class="modal-actions" style="margin-top: 30px;">
+              <button id="saveServiceBenefitsBtn" class="btn-primary">💾 Guardar todos los cambios</button>
+            </div>
+            <div id="serviceBenefitsMsg" class="msg" style="margin-top: 15px;"></div>
+          </div>
         </div>
 
         <!-- Asistente -->
@@ -1038,7 +1150,7 @@
   </div>
 </div>
 
-<!-- Modal Proyectos CON IMÁGENES ACTUALES + GALERÍA ADICIONAL -->
+<!-- Modal Proyectos -->
 <div id="projectModal" class="modal">
   <div class="modal-content">
     <h3 id="projectModalTitle">📁 Nuevo Proyecto</h3>
@@ -1052,8 +1164,7 @@
       <div><label>📂 Categoría</label><select id="projectCategoryId"></select></div>
     </div>
     
-    <!-- IMAGEN 1 (principal - se mantiene) -->
-    <label>🖼️ Imagen principal del proyecto (se muestra en tarjetas)</label>
+    <label>🖼️ Imagen principal del proyecto</label>
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
       <input type="url" id="projectImageUrl" placeholder="https://..." style="flex:1;" onchange="previewProjectImage()">
       <button type="button" class="btn-upload" onclick="document.getElementById('projectImageFile').click()">📁 Subir</button>
@@ -1061,7 +1172,6 @@
     </div>
     <img id="projectImagePreview" class="image-preview" style="display: none;">
     
-    <!-- IMAGEN 2 (secundaria - se mantiene) -->
     <label>🖼️ Imagen secundaria (opcional)</label>
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
       <input type="url" id="projectImage2Url" placeholder="https://..." style="flex:1;" onchange="previewProjectImage2()">
@@ -1070,7 +1180,6 @@
     </div>
     <img id="projectImage2Preview" class="image-preview" style="display: none;">
     
-    <!-- SELECTOR DE IMAGEN PRINCIPAL (mantenido) -->
     <label>🎯 ¿Qué imagen se muestra primero?</label>
     <div style="display: flex; gap: 20px; margin: 10px 0 16px 0;">
       <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -1081,9 +1190,8 @@
       </label>
     </div>
     
-    <!-- GALERÍA ADICIONAL DE IMÁGENES (NUEVO) -->
     <hr style="margin: 16px 0;">
-    <label>📸 Galería adicional de imágenes (se suman a las anteriores)</label>
+    <label>📸 Galería adicional de imágenes</label>
     <div id="galeriaAdicionalContainer" class="gallery-adicional-container"></div>
     <button type="button" id="addGaleriaImageBtn" class="btn-add-image">➕ Agregar imagen a galería</button>
     <div id="galeriaImageUploadContainer" style="display: none; margin-top: 10px;">
@@ -1096,7 +1204,6 @@
       </div>
     </div>
     
-    <!-- CUSTOM BADGE -->
     <div class="form-row" style="margin-top: 16px;">
       <div><label>🏷️ Badge personalizado (opcional)</label><input type="text" id="projectCustomBadge" placeholder="Ej: Nuevo, Oferta, Recomendado" maxlength="30"></div>
     </div>
@@ -1406,7 +1513,7 @@ let dynamicFields = [];
 
 // Variables para galería adicional de imágenes
 let galeriaAdicionalImages = [];
-let galeriaMainImageIndex = 0; // 0 = imagen1, 1 = imagen2, 2+ = galería adicional
+let galeriaMainImageIndex = 0;
 
 // ============================================================
 // FUNCIÓN SUBIR IMAGEN COMPRIMIDA
@@ -1961,7 +2068,8 @@ const panelMap = {
   aboutUs: 'aboutUsPanel',
   history: 'historyPanel',
   versions: 'versionsPanel',
-  settings: 'settingsPanel'
+  settings: 'settingsPanel',
+  'serviceBenefits': 'serviceBenefitsPanel'
 };
 
 navBtns.forEach(btn => {
@@ -1990,6 +2098,7 @@ navBtns.forEach(btn => {
     if (view === 'versions') loadVersionsSelect();
     if (view === 'dashboard') loadDashboard();
     if (view === 'settings') loadSettings();
+    if (view === 'serviceBenefits') loadServicesForBenefitsSelect();
   });
 });
 
@@ -2166,7 +2275,7 @@ window.saveService = async function() {
 window.deleteService = async function(id) { if(confirm('¿Eliminar este servicio?')){ await sb.from('services').delete().eq('id',id); loadServices(); loadDashboard(); } }
 
 // ============================================================
-// PROYECTOS CON IMÁGENES ACTUALES + GALERÍA ADICIONAL
+// PROYECTOS
 // ============================================================
 async function loadProjectSearchCategories() {
   const select = document.getElementById('projectSearchCategory');
@@ -2293,7 +2402,6 @@ window.openProjectModal = async function(id = null) {
   select.innerHTML = '<option value="">Sin categoría</option>';
   cats?.forEach(cat => { select.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`; });
   
-  // Resetear valores
   document.getElementById('projectImage2Preview').style.display = 'none';
   document.getElementById('projectImagePreview').style.display = 'none';
   document.getElementById('mainImage1').checked = true;
@@ -2313,7 +2421,6 @@ window.openProjectModal = async function(id = null) {
       document.getElementById('projectActive').checked = project.active !== false;
       document.getElementById('projectCustomBadge').value = project.custom_badge || '';
       
-      // Cargar main_image
       if (project.main_image === 'image2') {
         document.getElementById('mainImage2').checked = true;
       } else {
@@ -2329,7 +2436,6 @@ window.openProjectModal = async function(id = null) {
         document.getElementById('projectImage2Preview').style.display = 'block';
       }
       
-      // Cargar galería adicional
       if (project.images_galeria_adicional && Array.isArray(project.images_galeria_adicional)) {
         galeriaAdicionalImages = [...project.images_galeria_adicional];
       }
@@ -2362,7 +2468,6 @@ window.saveProject = async function() {
   
   const mainImage = document.querySelector('input[name="mainImage"]:checked')?.value || 'image1';
   
-  // Combinar imágenes: la galería adicional se guarda en un campo separado
   const payload = {
     title: document.getElementById('projectTitle').value,
     demo_url: document.getElementById('projectDemoUrl').value,
@@ -3254,6 +3359,205 @@ window.deleteBenefit = async function(id) {
 }
 
 // ============================================================
+// BENEFICIOS POR SERVICIO (NUEVA SECCIÓN)
+// ============================================================
+let currentServiceForBenefits = null;
+let tempGeneralBenefits = [];
+let tempExclusiveBenefits = [];
+
+async function loadServicesForBenefitsSelect() {
+  const select = document.getElementById('serviceBenefitSelect');
+  if (!select) return;
+  
+  const { data, error } = await sb.from('services').select('id, title, slug, general_benefits, service_benefits').eq('active', true).order('order_index', { ascending: true });
+  if (error) {
+    console.error('Error cargando servicios:', error);
+    return;
+  }
+  
+  select.innerHTML = '<option value="">-- Seleccionar servicio --</option>';
+  data.forEach(service => {
+    select.innerHTML += `<option value="${service.id}" data-service='${JSON.stringify(service)}'>${escapeHtml(service.title)}</option>`;
+  });
+  
+  select.onchange = () => {
+    if (select.value) {
+      const selectedOption = select.options[select.selectedIndex];
+      const serviceData = JSON.parse(selectedOption.dataset.service);
+      loadBenefitsForService(serviceData);
+    } else {
+      document.getElementById('serviceBenefitsEditor').style.display = 'none';
+    }
+  };
+}
+
+function loadBenefitsForService(service) {
+  currentServiceForBenefits = service;
+  document.getElementById('currentServiceName').innerHTML = `<strong>${escapeHtml(service.title)}</strong>`;
+  
+  // Cargar beneficios generales
+  let generalBenefits = [];
+  try {
+    if (service.general_benefits) {
+      if (typeof service.general_benefits === 'string') generalBenefits = JSON.parse(service.general_benefits);
+      else if (Array.isArray(service.general_benefits)) generalBenefits = service.general_benefits;
+    }
+  } catch(e) { generalBenefits = []; }
+  
+  tempGeneralBenefits = generalBenefits.map(item => {
+    if (typeof item === 'string') return { title: item, description: 'Beneficio general de presencia digital' };
+    return { title: item.title || '', description: item.description || 'Beneficio general de presencia digital' };
+  });
+  
+  // Cargar beneficios exclusivos
+  let exclusiveBenefits = [];
+  try {
+    if (service.service_benefits) {
+      if (typeof service.service_benefits === 'string') exclusiveBenefits = JSON.parse(service.service_benefits);
+      else if (Array.isArray(service.service_benefits)) exclusiveBenefits = service.service_benefits;
+    }
+  } catch(e) { exclusiveBenefits = []; }
+  
+  tempExclusiveBenefits = exclusiveBenefits.map(item => {
+    if (typeof item === 'string') return { title: item, description: 'Ventaja exclusiva de este servicio.' };
+    return { title: item.title || '', description: item.description || 'Ventaja exclusiva de este servicio.' };
+  });
+  
+  renderBenefitsEditors();
+  document.getElementById('serviceBenefitsEditor').style.display = 'block';
+}
+
+function renderBenefitsEditors() {
+  const generalContainer = document.getElementById('generalBenefitsList');
+  if (tempGeneralBenefits.length === 0) {
+    generalContainer.innerHTML = '<div style="color: var(--text2); padding: 20px; text-align: center;">No hay beneficios generales. Hacé clic en "Agregar beneficio general" para comenzar.</div>';
+  } else {
+    generalContainer.innerHTML = tempGeneralBenefits.map((benefit, idx) => `
+      <div class="benefit-editor-card" data-index="${idx}">
+        <div class="benefit-editor-fields">
+          <input type="text" class="benefit-title-input" value="${escapeHtml(benefit.title)}" placeholder="Título del beneficio">
+          <textarea class="benefit-desc-input" rows="2" placeholder="Descripción detallada...">${escapeHtml(benefit.description)}</textarea>
+        </div>
+        <div class="benefit-editor-actions">
+          <button class="btn-move-benefit" onclick="moveGeneralBenefit(${idx}, 'up')" ${idx === 0 ? 'disabled style="opacity:0.5"' : ''}>⬆️</button>
+          <button class="btn-move-benefit" onclick="moveGeneralBenefit(${idx}, 'down')" ${idx === tempGeneralBenefits.length - 1 ? 'disabled style="opacity:0.5"' : ''}>⬇️</button>
+          <button class="btn-remove-benefit" onclick="removeGeneralBenefit(${idx})">🗑️ Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+    
+    document.querySelectorAll('#generalBenefitsList .benefit-editor-card').forEach((card, idx) => {
+      const titleInput = card.querySelector('.benefit-title-input');
+      const descInput = card.querySelector('.benefit-desc-input');
+      if (titleInput) titleInput.oninput = (e) => { tempGeneralBenefits[idx].title = e.target.value; };
+      if (descInput) descInput.oninput = (e) => { tempGeneralBenefits[idx].description = e.target.value; };
+    });
+  }
+  
+  const exclusiveContainer = document.getElementById('exclusiveBenefitsList');
+  if (tempExclusiveBenefits.length === 0) {
+    exclusiveContainer.innerHTML = '<div style="color: var(--text2); padding: 20px; text-align: center;">No hay beneficios exclusivos. Hacé clic en "Agregar beneficio exclusivo" para comenzar.</div>';
+  } else {
+    exclusiveContainer.innerHTML = tempExclusiveBenefits.map((benefit, idx) => `
+      <div class="benefit-editor-card" data-index="${idx}">
+        <div class="benefit-editor-fields">
+          <input type="text" class="benefit-title-input" value="${escapeHtml(benefit.title)}" placeholder="Título del beneficio">
+          <textarea class="benefit-desc-input" rows="2" placeholder="Descripción detallada...">${escapeHtml(benefit.description)}</textarea>
+        </div>
+        <div class="benefit-editor-actions">
+          <button class="btn-move-benefit" onclick="moveExclusiveBenefit(${idx}, 'up')" ${idx === 0 ? 'disabled style="opacity:0.5"' : ''}>⬆️</button>
+          <button class="btn-move-benefit" onclick="moveExclusiveBenefit(${idx}, 'down')" ${idx === tempExclusiveBenefits.length - 1 ? 'disabled style="opacity:0.5"' : ''}>⬇️</button>
+          <button class="btn-remove-benefit" onclick="removeExclusiveBenefit(${idx})">🗑️ Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+    
+    document.querySelectorAll('#exclusiveBenefitsList .benefit-editor-card').forEach((card, idx) => {
+      const titleInput = card.querySelector('.benefit-title-input');
+      const descInput = card.querySelector('.benefit-desc-input');
+      if (titleInput) titleInput.oninput = (e) => { tempExclusiveBenefits[idx].title = e.target.value; };
+      if (descInput) descInput.oninput = (e) => { tempExclusiveBenefits[idx].description = e.target.value; };
+    });
+  }
+}
+
+function addGeneralBenefit() {
+  tempGeneralBenefits.push({ title: 'Nuevo beneficio', description: 'Descripción del beneficio...' });
+  renderBenefitsEditors();
+}
+
+function addExclusiveBenefit() {
+  tempExclusiveBenefits.push({ title: 'Nuevo beneficio exclusivo', description: 'Descripción de este beneficio...' });
+  renderBenefitsEditors();
+}
+
+function moveGeneralBenefit(index, direction) {
+  if (direction === 'up' && index > 0) {
+    [tempGeneralBenefits[index - 1], tempGeneralBenefits[index]] = [tempGeneralBenefits[index], tempGeneralBenefits[index - 1]];
+  } else if (direction === 'down' && index < tempGeneralBenefits.length - 1) {
+    [tempGeneralBenefits[index], tempGeneralBenefits[index + 1]] = [tempGeneralBenefits[index + 1], tempGeneralBenefits[index]];
+  }
+  renderBenefitsEditors();
+}
+
+function moveExclusiveBenefit(index, direction) {
+  if (direction === 'up' && index > 0) {
+    [tempExclusiveBenefits[index - 1], tempExclusiveBenefits[index]] = [tempExclusiveBenefits[index], tempExclusiveBenefits[index - 1]];
+  } else if (direction === 'down' && index < tempExclusiveBenefits.length - 1) {
+    [tempExclusiveBenefits[index], tempExclusiveBenefits[index + 1]] = [tempExclusiveBenefits[index + 1], tempExclusiveBenefits[index]];
+  }
+  renderBenefitsEditors();
+}
+
+function removeGeneralBenefit(index) {
+  if (confirm('¿Eliminar este beneficio general?')) {
+    tempGeneralBenefits.splice(index, 1);
+    renderBenefitsEditors();
+  }
+}
+
+function removeExclusiveBenefit(index) {
+  if (confirm('¿Eliminar este beneficio exclusivo?')) {
+    tempExclusiveBenefits.splice(index, 1);
+    renderBenefitsEditors();
+  }
+}
+
+async function saveServiceBenefits() {
+  if (!currentServiceForBenefits) {
+    alert('Seleccioná un servicio primero');
+    return;
+  }
+  
+  const generalToSave = tempGeneralBenefits.filter(b => b.title && b.title.trim() !== '');
+  const exclusiveToSave = tempExclusiveBenefits.filter(b => b.title && b.title.trim() !== '');
+  
+  const payload = {
+    general_benefits: generalToSave,
+    service_benefits: exclusiveToSave,
+    updated_at: new Date().toISOString()
+  };
+  
+  const { error } = await sb.from('services').update(payload).eq('id', currentServiceForBenefits.id);
+  
+  if (error) {
+    document.getElementById('serviceBenefitsMsg').innerHTML = `<div class="msg msg-error">❌ Error: ${error.message}</div>`;
+  } else {
+    document.getElementById('serviceBenefitsMsg').innerHTML = '<div class="msg msg-success">✅ Beneficios guardados correctamente</div>';
+    setTimeout(() => document.getElementById('serviceBenefitsMsg').innerHTML = '', 3000);
+    loadServicesForBenefitsSelect();
+  }
+}
+
+// Exponer funciones globalmente
+window.moveGeneralBenefit = moveGeneralBenefit;
+window.moveExclusiveBenefit = moveExclusiveBenefit;
+window.removeGeneralBenefit = removeGeneralBenefit;
+window.removeExclusiveBenefit = removeExclusiveBenefit;
+window.addGeneralBenefit = addGeneralBenefit;
+window.addExclusiveBenefit = addExclusiveBenefit;
+
+// ============================================================
 // ASISTENTE (PREGUNTAS)
 // ============================================================
 async function loadQuestions() {
@@ -3500,6 +3804,9 @@ document.getElementById('benefitSaveBtn').onclick = saveBenefit;
 document.getElementById('benefitCancelBtn').onclick = () => document.getElementById('benefitModal').style.display = 'none';
 document.getElementById('bannerSaveBtn').onclick = saveBanner;
 document.getElementById('bannerCancelBtn').onclick = () => document.getElementById('bannerModal').style.display = 'none';
+document.getElementById('addGeneralBenefitBtn')?.addEventListener('click', addGeneralBenefit);
+document.getElementById('addExclusiveBenefitBtn')?.addEventListener('click', addExclusiveBenefit);
+document.getElementById('saveServiceBenefitsBtn')?.addEventListener('click', saveServiceBenefits);
 
 window.previewServiceImage = previewServiceImage;
 window.previewProjectImage = previewProjectImage;
@@ -3523,7 +3830,6 @@ window.moverImagenAdicional = moverImagenAdicional;
 window.eliminarImagenAdicional = eliminarImagenAdicional;
 window.deleteLead = deleteLead;
 
-// Inicializar galería adicional
 setupGaleriaAdicionalButtons();
 
 async function loadAllData() {
@@ -3544,6 +3850,7 @@ async function loadAllData() {
   await loadAboutUs();
   await updateUnreadLeadsCount();
   setupSearchListeners();
+  await loadServicesForBenefitsSelect();
 }
 
 checkSession();
