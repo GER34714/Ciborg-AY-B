@@ -880,6 +880,9 @@
         <button class="nav-btn" data-view="faqs">❓ FAQs</button>
         <button class="nav-btn" data-view="assistant">🤖 Asistente</button>
 
+        <h3>👤 Institucional</h3>
+        <button class="nav-btn" data-view="aboutUs">👥 Quiénes somos</button>
+
         <h3>⚙️ Sistema</h3>
         <button class="nav-btn" data-view="internalData">📋 Datos Internos</button>
         <button class="nav-btn" data-view="history">📜 Historial</button>
@@ -1053,6 +1056,37 @@
             <button class="btn-primary" id="newFaqBtn">➕ Nueva FAQ</button>
           </div>
           <div id="faqsList" class="items-list"></div>
+        </div>
+
+        <!-- QUIÉNES SOMOS (NUEVO PANEL) -->
+        <div id="aboutUsPanel" class="panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h2>👥 Quiénes somos</h2>
+            <p style="color: var(--text2); font-size: 12px;">Editá el contenido de la página "Quiénes somos" del frontend.</p>
+          </div>
+          <div class="form-row">
+            <div><label>📝 Título</label><input type="text" id="aboutTitle" placeholder="Ej: Ciborg 347"></div>
+          </div>
+          <div>
+            <label>📄 Contenido (soporta HTML)</label>
+            <textarea id="aboutContent" rows="8" placeholder="Escribí el contenido de la página..."></textarea>
+          </div>
+          <div>
+            <label>🖼️ Imagen</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <input type="url" id="aboutImageUrl" placeholder="https://..." style="flex:1;">
+              <button type="button" class="btn-upload" onclick="document.getElementById('aboutImageFile').click()">📁 Subir imagen</button>
+              <input type="file" id="aboutImageFile" accept="image/*" style="display:none;" onchange="uploadImage('aboutImageUrl', this.files[0], 'aboutImagePreview')">
+            </div>
+            <img id="aboutImagePreview" class="image-preview" style="display: none;">
+          </div>
+          <div class="form-row">
+            <div><label style="display: flex; align-items: center; gap: 10px;"><input type="checkbox" id="aboutActive" checked> Activo (mostrar en el frontend)</label></div>
+          </div>
+          <div class="modal-actions" style="margin-top: 20px;">
+            <button id="saveAboutUsBtn" class="btn-primary">💾 Guardar cambios</button>
+          </div>
+          <div id="aboutUsMsg" class="msg" style="margin-top: 15px;"></div>
         </div>
 
         <!-- Historial -->
@@ -1487,6 +1521,7 @@ let banners = [];
 let approvedReviews = [];
 let settings = {};
 let projectVersions = [];
+let aboutData = null;
 
 // Paginación
 let itemsPerPage = 10;
@@ -1913,6 +1948,7 @@ const panelMap = {
   leads: 'leadsPanel',
   reviews: 'reviewsPanel',
   faqs: 'faqsPanel',
+  aboutUs: 'aboutUsPanel',
   history: 'historyPanel',
   versions: 'versionsPanel',
   settings: 'settingsPanel'
@@ -1939,6 +1975,7 @@ navBtns.forEach(btn => {
     if (view === 'leads') loadLeads();
     if (view === 'faqs') loadFaqs();
     if (view === 'reviews') loadReviews();
+    if (view === 'aboutUs') loadAboutUs();
     if (view === 'history') loadHistory();
     if (view === 'versions') loadVersionsSelect();
     if (view === 'dashboard') loadDashboard();
@@ -2669,6 +2706,95 @@ window.deleteBanner = async function(id) {
 }
 
 // ============================================================
+// QUIÉNES SOMOS (NUEVA FUNCIONALIDAD)
+// ============================================================
+async function loadAboutUs() {
+  const container = document.getElementById('aboutUsPanel');
+  if (!container) return;
+  
+  try {
+    const { data, error } = await sb
+      .from('about_us')
+      .select('*')
+      .maybeSingle();
+    
+    if (error) throw error;
+    
+    aboutData = data;
+    
+    if (data) {
+      document.getElementById('aboutTitle').value = data.title || '';
+      document.getElementById('aboutContent').value = data.content || '';
+      document.getElementById('aboutImageUrl').value = data.image_url || '';
+      document.getElementById('aboutActive').checked = data.active !== false;
+      
+      if (data.image_url) {
+        document.getElementById('aboutImagePreview').src = data.image_url;
+        document.getElementById('aboutImagePreview').style.display = 'block';
+      } else {
+        document.getElementById('aboutImagePreview').style.display = 'none';
+      }
+    } else {
+      document.getElementById('aboutTitle').value = 'Ciborg 347';
+      document.getElementById('aboutContent').value = '<p>Somos una agencia de desarrollo web especializada en crear soluciones digitales a medida para empresas y emprendedores.</p><p>Nos apasiona la tecnología y nos dedicamos a construir herramientas que potencian negocios.</p>';
+      document.getElementById('aboutImageUrl').value = '';
+      document.getElementById('aboutActive').checked = true;
+      document.getElementById('aboutImagePreview').style.display = 'none';
+    }
+  } catch(e) {
+    console.error("Error loading About Us:", e);
+    document.getElementById('aboutUsMsg').innerHTML = '<div class="msg msg-error">Error al cargar los datos</div>';
+  }
+}
+
+async function saveAboutUs() {
+  const title = document.getElementById('aboutTitle').value;
+  const content = document.getElementById('aboutContent').value;
+  const imageUrl = document.getElementById('aboutImageUrl').value;
+  const active = document.getElementById('aboutActive').checked;
+  
+  if (!title) {
+    document.getElementById('aboutUsMsg').innerHTML = '<div class="msg msg-error">El título es obligatorio</div>';
+    return;
+  }
+  
+  if (!content) {
+    document.getElementById('aboutUsMsg').innerHTML = '<div class="msg msg-error">El contenido es obligatorio</div>';
+    return;
+  }
+  
+  const payload = {
+    title: title,
+    content: content,
+    image_url: imageUrl || null,
+    active: active,
+    updated_at: new Date().toISOString()
+  };
+  
+  try {
+    let result;
+    if (aboutData && aboutData.id) {
+      result = await sb.from('about_us').update(payload).eq('id', aboutData.id);
+    } else {
+      payload.created_at = new Date().toISOString();
+      result = await sb.from('about_us').insert([payload]);
+    }
+    
+    if (result.error) throw result.error;
+    
+    document.getElementById('aboutUsMsg').innerHTML = '<div class="msg msg-success">✅ Cambios guardados correctamente</div>';
+    setTimeout(() => {
+      document.getElementById('aboutUsMsg').innerHTML = '';
+    }, 3000);
+    
+    loadAboutUs();
+  } catch(e) {
+    console.error("Error saving About Us:", e);
+    document.getElementById('aboutUsMsg').innerHTML = '<div class="msg msg-error">Error al guardar: ' + e.message + '</div>';
+  }
+}
+
+// ============================================================
 // VERSIONES
 // ============================================================
 async function loadVersionsSelect() {
@@ -3225,6 +3351,7 @@ document.getElementById('exportLeadsBtn').onclick = exportLeadsToCSV;
 document.getElementById('saveSettingsBtn').onclick = saveSettings;
 document.getElementById('internalDataSaveBtn').onclick = saveInternalData;
 document.getElementById('internalDataCancelBtn').onclick = () => document.getElementById('internalDataModal').style.display = 'none';
+document.getElementById('saveAboutUsBtn').onclick = saveAboutUs;
 
 document.getElementById('serviceSaveBtn').onclick = saveService;
 document.getElementById('serviceCancelBtn').onclick = () => document.getElementById('serviceModal').style.display = 'none';
@@ -3279,6 +3406,7 @@ async function loadAllData() {
   await loadFaqs();
   await loadVersionsSelect();
   await loadSettings();
+  await loadAboutUs();
   setupSearchListeners();
 }
 
