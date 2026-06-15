@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    /* ========== MISMO CSS QUE TENÍAS ========== */
+    /* ========== MISMO CSS QUE TENÍAS (sin robot flotante) ========== */
     :root {
       --bg: #0a0a0f;
       --bg2: #0f0f1a;
@@ -86,9 +86,16 @@
     }
     .brand { display: flex; align-items: center; gap: 12px; transition: transform 0.2s; }
     .brand:hover { transform: translateY(-1px); }
-    .brand__logo { width: 44px; height: 44px; object-fit: contain; border-radius: 10px; }
-    .brand__text strong { font-family: 'Syne', sans-serif; font-size: 17px; color: var(--white); }
-    .brand__text span { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); text-transform: uppercase; }
+    .brand__logo { width: 44px; height: 44px; object-fit: contain; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; animation: neonPulse 2s ease-in-out infinite; }
+    .brand__logo:hover { animation: none; transform: scale(1.02); filter: drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 25px var(--violet)); }
+    @keyframes neonPulse {
+      0% { filter: drop-shadow(0 0 2px var(--cyan)) drop-shadow(0 0 5px var(--cyan)); }
+      50% { filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 20px var(--cyan)) drop-shadow(0 0 30px var(--violet)); }
+      100% { filter: drop-shadow(0 0 2px var(--cyan)) drop-shadow(0 0 5px var(--cyan)); }
+    }
+    .brand__text { text-align: left; }
+    .brand__text strong { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--white); display: block; line-height: 1.2; }
+    .brand__text span { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; display: block; }
 
     .theme-toggle {
       background: var(--glass);
@@ -103,7 +110,7 @@
     }
     .theme-toggle:hover { border-color: var(--cyan); transform: scale(1.05); box-shadow: 0 0 10px var(--cyan); }
 
-    .nav { display: flex; align-items: center; gap: 4px; }
+    .nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .nav a {
       padding: 7px 14px; border-radius: 8px;
       font-family: 'JetBrains Mono', monospace; font-size: 12px;
@@ -243,22 +250,13 @@
       flex-wrap: wrap;
     }
 
-    .robot-icon {
-      width: 50px;
-      height: 50px;
-      background: var(--grad);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-      animation: floatRobot 3s ease-in-out infinite;
-    }
-
-    @keyframes floatRobot {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
+    /* Logo chiquito en el header del asistente */
+    .asistente-logo {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 10px;
+      animation: neonPulse 2s ease-in-out infinite;
     }
 
     .asistente-header-card h2 {
@@ -591,11 +589,17 @@
       align-items: center;
     }
     .footer__brand { display: flex; align-items: center; gap: 12px; }
-    .footer__brand img { width: 38px; border-radius: 8px; }
-    .footer__links { display: flex; gap: 1.5rem; }
+    .footer__brand img { width: 38px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; animation: neonPulse 2s ease-in-out infinite; }
+    .footer__brand img:hover { animation: none; filter: drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 25px var(--violet)); transform: scale(1.02); }
+    .footer__brand div strong { font-family: 'Syne', sans-serif; font-size: 14px; color: var(--white); display: block; }
+    .footer__brand div span { font-size: 9px; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+    .footer__links { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
     .footer__links a { font-size: 12px; color: var(--text2); transition: color 0.2s; }
     .footer__links a:hover { color: var(--cyan); }
-    .footer__copy { font-size: 11px; color: var(--text2); }
+    .footer__copy { font-size: 11px; color: var(--text2); text-align: center; }
+    .footer__social { margin-top: 1rem; text-align: center; }
+    .btn-social { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); padding: 10px 20px; border-radius: 40px; color: white; font-family: 'JetBrains Mono', monospace; font-size: 12px; transition: all 0.3s ease; }
+    .btn-social:hover { transform: scale(1.05); box-shadow: 0 0 15px #fd1d1d; }
 
     /* WhatsApp flotante */
     .waFloat {
@@ -617,12 +621,15 @@
     }
     .waFloat.hidden { opacity: 0; visibility: hidden; }
     .waFloat:hover { transform: scale(1.08) rotate(5deg); box-shadow: 0 0 20px #25d366; }
+    .waFloat svg { width: 28px; height: 28px; fill: white; }
 
     @media (max-width: 900px) {
       .nav { display: none; }
       .burger { display: flex; }
       .asistente-body { padding: 24px; }
       .question { font-size: 1.1rem; }
+      .footer__inner { flex-direction: column; text-align: center; }
+      .footer__links { justify-content: center; flex-wrap: wrap; }
     }
     @media (max-width: 600px) {
       .asistente-main { padding: 40px 0; }
@@ -631,10 +638,8 @@
       .result-title { font-size: 1.1rem; }
       .price-tag .price { font-size: 1.4rem; }
       .toast-message { white-space: normal; text-align: center; max-width: 80%; font-size: 0.65rem; }
-      .footer__inner { flex-direction: column; text-align: center; }
-      .footer__links { justify-content: center; flex-wrap: wrap; }
-      .robot-icon { width: 40px; height: 40px; font-size: 22px; }
       .asistente-header-card h2 { font-size: 1.2rem; }
+      .asistente-logo { width: 32px; height: 32px; }
     }
   </style>
 </head>
@@ -643,19 +648,22 @@
 <header class="topbar">
   <div class="wrap topbar__inner">
     <a href="index.html" class="brand">
-      <img class="brand__logo" src="https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/fETkPEv.md.png" alt="Logo" />
-      <div class="brand__text"><strong>CIBORG 347</strong><span>Desarrollo Web</span></div>
+      <img class="brand__logo" src="https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/fETkPEv.md.png" alt="Logo Ciborg 347 - Desarrollo Web" />
+      <div class="brand__text"><strong>CIBORG 347</strong><span>DESARROLLO WEB</span></div>
     </a>
     <nav class="nav">
       <a href="index.html#portfolio">Portfolio</a>
       <a href="index.html#servicios">Servicios</a>
+      <a href="index.html#casos-exito">Casos de éxito</a>
+      <a href="index.html#marcas">Marcas</a>
+      <a href="beneficios.html">Beneficios</a>
       <a href="index.html#faq">FAQ</a>
       <a href="index.html#contacto">Contacto</a>
+      <a href="quienes-somos.html">Quiénes somos</a>
     </nav>
     <div class="topbar__cta">
-      <button class="theme-toggle" id="themeToggle">🌙</button>
-      <a href="index.html#contacto" class="btn btn--primary btn--sm">Contacto</a>
-      <button class="burger" id="burgerBtn"><span></span><span></span><span></span></button>
+      <a href="index.html#contacto" class="btn btn--primary btn--sm" aria-label="Solicitar presupuesto">Presupuesto</a>
+      <button class="burger" id="burgerBtn" aria-label="Menú de navegación"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
@@ -663,8 +671,12 @@
 <nav class="mobileMenu" id="mobileMenu">
   <a href="index.html#portfolio">Portfolio</a>
   <a href="index.html#servicios">Servicios</a>
+  <a href="index.html#casos-exito">Casos de éxito</a>
+  <a href="index.html#marcas">Marcas</a>
+  <a href="beneficios.html">Beneficios</a>
   <a href="index.html#faq">FAQ</a>
   <a href="index.html#contacto">Contacto</a>
+  <a href="quienes-somos.html">Quiénes somos</a>
   <a href="#" class="btn btn--wa" id="mobileWhatsAppBtn">WhatsApp</a>
 </nav>
 
@@ -672,7 +684,7 @@
   <div class="wrap">
     <div class="asistente-card">
       <div class="asistente-header-card">
-        <div class="robot-icon">🤖</div>
+        <img class="asistente-logo" src="https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/fETkPEv.md.png" alt="Logo Ciborg 347">
         <div>
           <h2>Asistente Ciborg 347</h2>
           <p>Respondé algunas preguntas y te recomendamos la solución ideal</p>
@@ -693,22 +705,36 @@
   <div class="wrap">
     <div class="footer__inner">
       <div class="footer__brand">
-        <img src="https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/fETkPEv.md.png" alt="Logo" />
-        <div><strong>CIBORG 347</strong><span style="display: block; font-size: 10px;">Desarrollo Web</span></div>
+        <img id="footerLogo" src="https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/fETkPEv.md.png" alt="Logo Ciborg 347 - Desarrollo Web" loading="lazy" width="38" height="38" />
+        <div><strong>CIBORG 347</strong><span>Desarrollo Web</span></div>
       </div>
       <div class="footer__links">
         <a href="index.html#portfolio">Proyectos</a>
         <a href="index.html#servicios">Servicios</a>
+        <a href="index.html#casos-exito">Casos de éxito</a>
+        <a href="index.html#marcas">Marcas</a>
+        <a href="beneficios.html">Beneficios</a>
         <a href="index.html#faq">FAQ</a>
         <a href="index.html#contacto">Contacto</a>
+        <a href="quienes-somos.html">Quiénes somos</a>
       </div>
-      <div class="footer__copy">© 2025 Ciborg 347 — Diseñamos hoy, impulsamos tu futuro.</div>
+      <div class="footer__copy">
+        © 2026 Ciborg 347 — Diseñamos hoy, impulsamos tu futuro.
+        <div class="footer__social">
+          <a href="https://instagram.com/CIBORG347" target="_blank" class="btn-social" aria-label="Instagram">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 110 2.881 1.44 1.44 0 010-2.881z"/>
+            </svg>
+            <span>Seguinos en Instagram</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </footer>
 
-<a href="#" class="waFloat" id="waFloat" target="_blank">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+<a href="#" class="waFloat" id="waFloat" target="_blank" aria-label="WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="white" aria-hidden="true">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 </a>
@@ -719,7 +745,7 @@
   const SUPABASE_URL = "https://fhxcumwhgtfirznnznjx.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoeGN1bXdoZ3RmaXJ6bm56bmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5OTYyNzEsImV4cCI6MjA4MzU3MjI3MX0.7z1B099L4yrA9k1JxwvYGCABzqiqYtkUClI3E8wQ2zA";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const DEFAULT_WA = window.CIBORG_CONFIG?.WHATSAPP_NUMBER || "5491164499481";
+  const DEFAULT_WA = "5491164499481";
 
   // ========== VARIABLES GLOBALES ==========
   let serviciosFromDB = [];
@@ -766,10 +792,13 @@
   // ========== OBTENER PRECIO DE UN SERVICIO POR SLUG ==========
   function getPrecioBySlug(slug) {
     const servicio = serviciosFromDB.find(s => s.slug === slug);
+    if (servicio && servicio.price_ars) {
+      return `Desde $${new Intl.NumberFormat('es-AR').format(servicio.price_ars)} ARS`;
+    }
     if (servicio && servicio.price) {
       return servicio.price;
     }
-    return null;
+    return "Consultar";
   }
 
   // ========== OBTENER DESCRIPCIÓN DE UN SERVICIO POR SLUG ==========
@@ -846,28 +875,31 @@
     return (msg) => `https://wa.me/${DEFAULT_WA}?text=${encodeURIComponent(msg)}`;
   }
 
-  // Tooltips
-  const glosario = {
-    "Landing Page": "Página diseñada específicamente para convertir visitantes en clientes, con un objetivo claro y llamado a la acción.",
-    "Panel Admin": "Sistema interno para gestionar productos, usuarios, ventas y contenido sin necesidad de programación.",
-    "SEO": "Optimización para que tu web aparezca en los primeros resultados de Google.",
-    "Responsive": "Diseño que se adapta automáticamente a celulares, tablets y computadoras.",
-    "Ecommerce": "Tienda online que permite vender productos con carrito de compras y pasarela de pagos.",
-    "Catálogo Digital": "Vitrina online para mostrar productos sin necesidad de tener un carrito de compras."
-  };
-
-  window.showTooltip = function(texto) {
-    const tooltipDiv = document.createElement('div');
-    tooltipDiv.className = 'toast-message';
-    tooltipDiv.textContent = texto;
-    tooltipDiv.style.background = 'var(--bg3)';
-    tooltipDiv.style.border = '1px solid var(--cyan)';
-    tooltipDiv.style.maxWidth = '300px';
-    tooltipDiv.style.whiteSpace = 'normal';
-    tooltipDiv.style.textAlign = 'center';
-    document.body.appendChild(tooltipDiv);
-    setTimeout(() => tooltipDiv.remove(), 3000);
-  };
+  // ========== GUARDAR LEAD EN SUPABASE ==========
+  async function saveLeadToSupabase(lead, recommendation) {
+    try {
+      const { data, error } = await sb
+        .from('guide_leads')
+        .insert([{
+          name: lead.nombre,
+          whatsapp: lead.whatsapp,
+          email: lead.email || null,
+          company: lead.empresa || null,
+          result_title: recommendation.titulo,
+          free_text: recommendation.descripcion,
+          created_at: new Date().toISOString()
+        }]);
+      
+      if (error) {
+        console.error("Error saving lead:", error);
+        showToast("No se pudo guardar tu consulta, pero igual te mostramos la recomendación", true);
+      } else {
+        console.log("✅ Lead guardado en Supabase");
+      }
+    } catch (err) {
+      console.error("Error en saveLeadToSupabase:", err);
+    }
+  }
 
   // ========== CALCULAR PRECIO ESTIMADO (USANDO DATOS DE SUPABASE) ==========
   async function calcularRecomendacion() {
@@ -886,46 +918,46 @@
       if (userAnswers.vender_vender === 'si') {
         servicioSlug = 'tienda';
         servicioNombre = getTituloBySlug('tienda') || 'Tienda Online';
-        servicioPrecio = getPrecioBySlug('tienda') || 'Consultar';
+        servicioPrecio = getPrecioBySlug('tienda');
         servicioDescripcion = getDescripcionBySlug('tienda') || 'Ecommerce completo con carrito y pagos integrados.';
         servicioFeatures = getFeaturesBySlug('tienda');
       } else {
         servicioSlug = 'catalogo';
         servicioNombre = getTituloBySlug('catalogo') || 'Catálogo Digital';
-        servicioPrecio = getPrecioBySlug('catalogo') || 'Consultar';
+        servicioPrecio = getPrecioBySlug('catalogo');
         servicioDescripcion = getDescripcionBySlug('catalogo') || 'Vitrina profesional para mostrar productos con consulta directa.';
         servicioFeatures = getFeaturesBySlug('catalogo');
       }
     } else if (userAnswers.q1 === 'conseguir_clientes') {
       servicioSlug = 'landing';
       servicioNombre = getTituloBySlug('landing') || 'Landing de Conversión';
-      servicioPrecio = getPrecioBySlug('landing') || 'Consultar';
+      servicioPrecio = getPrecioBySlug('landing');
       servicioDescripcion = getDescripcionBySlug('landing') || 'Diseñada específicamente para captar clientes y convertir visitas en consultas.';
       servicioFeatures = getFeaturesBySlug('landing');
     } else if (userAnswers.q1 === 'mostrar_servicios') {
       if (userAnswers.mostrar_administrable === 'si') {
         servicioSlug = 'institucional';
         servicioNombre = getTituloBySlug('institucional') || 'Web Profesional';
-        servicioPrecio = getPrecioBySlug('institucional') || 'Consultar';
+        servicioPrecio = getPrecioBySlug('institucional');
         servicioDescripcion = getDescripcionBySlug('institucional') || 'Sitio web corporativo completo con panel de administración.';
         servicioFeatures = getFeaturesBySlug('institucional');
       } else {
         servicioSlug = 'landing';
         servicioNombre = getTituloBySlug('landing') || 'Landing de Servicios';
-        servicioPrecio = getPrecioBySlug('landing') || 'Consultar';
+        servicioPrecio = getPrecioBySlug('landing');
         servicioDescripcion = getDescripcionBySlug('landing') || 'Página profesional para mostrar tus servicios.';
         servicioFeatures = getFeaturesBySlug('landing');
       }
     } else if (userAnswers.q1 === 'automatizar') {
       servicioSlug = 'admin';
       servicioNombre = getTituloBySlug('admin') || 'Panel Administrativo';
-      servicioPrecio = getPrecioBySlug('admin') || 'Consultar';
+      servicioPrecio = getPrecioBySlug('admin');
       servicioDescripcion = getDescripcionBySlug('admin') || 'Sistema a medida para automatizar procesos y gestionar tu negocio.';
       servicioFeatures = getFeaturesBySlug('admin');
     } else if (userAnswers.q1 === 'presencia') {
       servicioSlug = 'institucional';
       servicioNombre = getTituloBySlug('institucional') || 'Web Institucional';
-      servicioPrecio = getPrecioBySlug('institucional') || 'Consultar';
+      servicioPrecio = getPrecioBySlug('institucional');
       servicioDescripcion = getDescripcionBySlug('institucional') || 'Sitio web corporativo para presentar tu empresa de manera profesional.';
       servicioFeatures = getFeaturesBySlug('institucional');
     } else {
@@ -1106,7 +1138,7 @@
     scrollToTop();
   }
 
-  // ========== RAMAS SIMPLIFICADAS (manteniendo la estructura original) ==========
+  // ========== RAMAS SIMPLIFICADAS ==========
   function showConseguirClientes1() {
     currentStep = "conseguir1";
     const body = document.getElementById('asistenteBody');
@@ -1183,7 +1215,6 @@
     scrollToTop();
   }
 
-  // Rama mostrar servicios
   function showMostrarServicios1() {
     currentStep = "mostrar1";
     const body = document.getElementById('asistenteBody');
@@ -1258,7 +1289,6 @@
     scrollToTop();
   }
 
-  // Rama vender productos
   function showVenderProductos1() {
     currentStep = "vender1";
     const body = document.getElementById('asistenteBody');
@@ -1332,7 +1362,6 @@
     scrollToTop();
   }
 
-  // Rama automatizar
   function showAutomatizar1() {
     currentStep = "auto1";
     const body = document.getElementById('asistenteBody');
@@ -1359,7 +1388,6 @@
     scrollToTop();
   }
 
-  // Rama presencia
   function showPresencia1() {
     currentStep = "presencia1";
     const body = document.getElementById('asistenteBody');
@@ -1384,7 +1412,7 @@
     scrollToTop();
   }
 
-  // ========== CAPTURA LEAD ==========
+  // ========== CAPTURA LEAD Y GUARDADO EN SUPABASE ==========
   function showLeadCapture() {
     currentStep = "lead";
     const body = document.getElementById('asistenteBody');
@@ -1400,15 +1428,26 @@
       <button class="btn-next" id="enviarLeadBtn">Ver mi recomendación →</button>
       <button class="btn-back" id="backBtn">← Volver</button>
     `;
-    document.getElementById('enviarLeadBtn')?.addEventListener('click', () => {
+    
+    document.getElementById('enviarLeadBtn')?.addEventListener('click', async () => {
       const nombre = document.getElementById('leadNombre')?.value.trim();
       const whatsapp = document.getElementById('leadWhatsapp')?.value.trim();
       if (!nombre || !whatsapp) { showToast('Completá tu nombre y WhatsApp', true); return; }
-      leadData = { nombre, whatsapp, email: document.getElementById('leadEmail')?.value.trim() || '', empresa: document.getElementById('leadEmpresa')?.value.trim() || '' };
+      
+      leadData = { 
+        nombre, 
+        whatsapp, 
+        email: document.getElementById('leadEmail')?.value.trim() || '', 
+        empresa: document.getElementById('leadEmpresa')?.value.trim() || '' 
+      };
       userAnswers.lead = leadData;
       saveToLocalStorage();
+      
+      const resultado = await calcularRecomendacion();
+      await saveLeadToSupabase(leadData, resultado);
       showResultadoFinal();
     });
+    
     document.getElementById('backBtn')?.addEventListener('click', () => {
       if (userAnswers.q1 === 'conseguir_clientes') showConseguirClientes3();
       else if (userAnswers.q1 === 'mostrar_servicios') showMostrarServicios3();
