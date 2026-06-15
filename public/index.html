@@ -27,7 +27,7 @@
   </script>
   
   <style>
-    /* ========== CSS ORIGINAL (sin modificar) ========== */
+    /* ========== CSS ORIGINAL (sin modificar excepto agregados) ========== */
     :root {
       --bg: #0a0a0f;
       --bg2: #0f0f1a;
@@ -106,7 +106,7 @@
     .brand__text { text-align: left; }
     .brand__text strong { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--white); display: block; line-height: 1.2; }
     .brand__text span { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; display: block; }
-    .nav { display: flex; align-items: center; gap: 4px; }
+    .nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .nav a {
       padding: 7px 14px; border-radius: 8px;
       font-family: 'JetBrains Mono', monospace; font-size: 12px;
@@ -1051,6 +1051,8 @@
       animation: shimmer 1.5s infinite;
     }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    
+    /* ========== MODAL DE PROYECTOS CON GALERÍA (NUEVO) ========== */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -1065,16 +1067,11 @@
     .modal-container {
       background: var(--bg2);
       border-radius: 24px;
-      max-width: 550px;
+      max-width: 700px;
       width: 100%;
       max-height: 85vh;
-      overflow: auto;
-      border: 1px solid var(--border);
-      animation: modalFade 0.25s ease;
-    }
-    @keyframes modalFade {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+      overflow-y: auto;
+      border: 1px solid var(--cyan);
     }
     .modal-header {
       padding: 1.25rem 1.5rem;
@@ -1093,16 +1090,80 @@
       transition: color 0.2s;
     }
     .modal-close:hover { color: var(--cyan); }
-    .modal-body { padding: 1.5rem; }
-    .modal-img {
+    .modal-body {
+      padding: 1.5rem;
+    }
+    /* Galería */
+    .gallery-container {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .gallery-main {
+      position: relative;
       width: 100%;
       border-radius: 16px;
-      margin-bottom: 1rem;
-      cursor: pointer;
-      transition: transform 0.2s ease;
+      overflow: hidden;
+      background: var(--bg3);
+      touch-action: pan-y pinch-zoom;
     }
-    .modal-img:hover {
-      transform: scale(1.02);
+    .gallery-main-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: contain;
+      display: block;
+      cursor: pointer;
+    }
+    .gallery-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.6);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+    .gallery-nav-btn:hover {
+      background: var(--cyan);
+      transform: translateY(-50%) scale(1.05);
+    }
+    .gallery-prev {
+      left: 10px;
+    }
+    .gallery-next {
+      right: 10px;
+    }
+    .gallery-thumbnails {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .gallery-thumb {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .gallery-thumb.active {
+      opacity: 1;
+      border-color: var(--cyan);
+    }
+    .gallery-thumb:hover {
+      opacity: 1;
     }
     .modal-cat {
       font-family: 'JetBrains Mono', monospace;
@@ -1114,6 +1175,7 @@
     .modal-desc { color: var(--text2); line-height: 1.7; margin: 1rem 0; }
     .modal-actions { display: flex; gap: 12px; margin-top: 1.5rem; flex-wrap: wrap; }
     .modal-actions .btn { flex: 1; justify-content: center; }
+    
     .lightbox-overlay {
       position: fixed;
       inset: 0;
@@ -1418,11 +1480,15 @@
       .controls-bar { flex-direction: column; align-items: stretch; }
       .footer__inner { flex-direction: column; align-items: center; text-align: center; }
       .footer__links { justify-content: center; }
+      .gallery-nav-btn { width: 32px; height: 32px; font-size: 1.2rem; }
+      .gallery-thumb { width: 45px; height: 45px; }
     }
     @media (max-width: 600px) {
       .section { padding: 60px 0; }
       .hero__stats { display: flex; }
       .projectsGrid { gap: 20px; }
+      .gallery-nav-btn { width: 28px; height: 28px; font-size: 1rem; }
+      .gallery-thumb { width: 40px; height: 40px; }
     }
     .fade-in-up,
     .fade-in-left,
@@ -1441,7 +1507,7 @@
       display: grid !important;
     }
 
-    /* ===== ROBOT FLOTANTE ===== */
+    /* ===== ROBOT FLOTANTE (MODIFICADO) ===== */
     .robot-help {
       position: fixed;
       right: 20px;
@@ -1461,19 +1527,23 @@
       visibility: hidden;
     }
     .robot-help .robot-img {
-      width: 130px;
+      width: 55px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .robot-help.shrink .robot-img {
-      width: 55px;
+    .robot-help.enlarged .robot-img {
+      width: 130px;
     }
     .robot-help:hover .robot-img {
       width: 130px !important;
     }
-    .robot-help.shrink .robot-bubble {
+    .robot-help .robot-bubble {
       font-size: 0.7rem;
       padding: 6px 12px;
       white-space: nowrap;
+    }
+    .robot-help.enlarged .robot-bubble {
+      font-size: 0.85rem;
+      padding: 10px 18px;
     }
     .robot-help:hover .robot-bubble {
       font-size: 0.85rem;
@@ -1538,10 +1608,11 @@
     }
     @media (max-width: 600px) {
       .robot-help { bottom: 80px; right: 10px; }
-      .robot-help .robot-img { width: 90px; }
-      .robot-help.shrink .robot-img { width: 50px; }
+      .robot-help .robot-img { width: 45px; }
+      .robot-help.enlarged .robot-img { width: 90px; }
       .robot-help:hover .robot-img { width: 90px !important; }
       .robot-bubble { padding: 5px 10px; font-size: 0.65rem; right: 5px; white-space: nowrap; }
+      .robot-help.enlarged .robot-bubble { font-size: 0.75rem; padding: 8px 14px; }
     }
   </style>
 </head>
@@ -1561,6 +1632,7 @@
       <a href="beneficios.html">Beneficios</a>
       <a href="#faq">FAQ</a>
       <a href="#contacto">Contacto</a>
+      <a href="quienes-somos.html">Quiénes somos</a>
     </nav>
     <div class="topbar__cta">
       <a href="#contacto" class="btn btn--primary btn--sm" aria-label="Solicitar presupuesto">Presupuesto</a>
@@ -1576,10 +1648,11 @@
   <a href="beneficios.html">Beneficios</a>
   <a href="#faq">FAQ</a>
   <a href="#contacto">Contacto</a>
+  <a href="quienes-somos.html">Quiénes somos</a>
   <a href="#" class="btn btn--wa" id="mobileWhatsAppBtn">WhatsApp</a>
 </nav>
 
-<!-- ===== ROBOT FLOTANTE ===== -->
+<!-- ===== ROBOT FLOTANTE (MODIFICADO) ===== -->
 <div class="robot-help" id="robotHelpBtn" aria-label="Asistente virtual">
   <div class="robot-container">
     <div class="robot-bubble" id="robotBubble">🤖 Hola, ¿necesitas ayuda?</div>
@@ -1853,6 +1926,7 @@
         <a href="beneficios.html">Beneficios</a>
         <a href="#faq">FAQ</a>
         <a href="#contacto">Contacto</a>
+        <a href="quienes-somos.html">Quiénes somos</a>
       </div>
       <div class="footer__copy">
         © 2026 Ciborg 347 — Diseñamos hoy, impulsamos tu futuro.
@@ -1887,25 +1961,16 @@ const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("🔌 Conectando a Supabase...");
 
-// ========== FUNCIÓN PARA FORMATEAR PRECIOS (CORREGIDA - CON "Desde") ==========
-// Soporta price_ars (nuevo), price (legacy), números, strings con formato "700.000" y texto "Consultar"
+// ========== FUNCIÓN PARA FORMATEAR PRECIOS ==========
 function getPrecioMostrar(service) {
-  // 1. Intentar obtener price_ars (nuevo campo numérico)
   let precioRaw = service.price_ars;
-  
-  // 2. Si no existe, usar price (campo legacy)
   if (precioRaw === undefined || precioRaw === null) {
     precioRaw = service.price;
   }
-  
-  // 3. Si no hay precio, mostrar "Consultar"
   if (!precioRaw || precioRaw === "") {
     return "Consultar";
   }
-  
-  // 4. Si ya es un texto como "Consultar" u otro, mostrarlo directamente
   if (typeof precioRaw === "string" && isNaN(parseFloat(precioRaw))) {
-    // Si el texto tiene números con formato ej "700.000" o "700,000"
     const numerosExtraidos = precioRaw.match(/[\d,.]+/);
     if (numerosExtraidos) {
       let numeroLimpio = numerosExtraidos[0].replace(/\./g, '').replace(/,/g, '');
@@ -1913,49 +1978,31 @@ function getPrecioMostrar(service) {
         return `Desde $${new Intl.NumberFormat('es-AR').format(parseFloat(numeroLimpio))} ARS`;
       }
     }
-    // Si no se pudieron extraer números, mostrar el texto original
     return precioRaw;
   }
-  
-  // 5. Si es número, formatear (CORREGIDO: agrega "Desde")
   let numero = parseFloat(precioRaw);
   if (!isNaN(numero)) {
     return `Desde $${new Intl.NumberFormat('es-AR').format(numero)} ARS`;
   }
-  
-  // 6. Fallback: mostrar como viene
   return precioRaw;
-  
-  /* ========== CÓDIGO PREPARADO PARA FUTURO USD ==========
-  // Cuando implementes el selector de moneda, podés usar esto:
-  // const mostrarUSD = service.show_usd === true;
-  // if (mostrarUSD && selectorMoneda === 'USD' && service.price_usd) {
-  //   return `Desde $${service.price_usd} USD`;
-  // }
-  ======================================================== */
 }
 
-// ========== FUNCIÓN PARA CARGAR SERVICIOS (MODIFICADA - usa getPrecioMostrar) ==========
+// ========== FUNCIÓN PARA CARGAR SERVICIOS ==========
 async function loadServicesReal() {
   const container = document.getElementById('servicesGrid');
   if (!container) return;
-  
   container.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
-  
   try {
     const { data: services, error: servicesError } = await sb
       .from('services')
       .select('*')
       .eq('active', true)
       .order('order_index', { ascending: true });
-    
     if (servicesError) throw servicesError;
-    
     if (!services || services.length === 0) {
       container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2);">Próximamente más servicios</div>';
       return;
     }
-    
     const slugMap = {
       'tiendas-online': 'tienda',
       'sistemas-pedidos': 'pedidos',
@@ -1964,21 +2011,16 @@ async function loadServicesReal() {
       'webs-institucionales': 'institucional',
       'catalogos-digitales': 'catalogo'
     };
-    
     container.innerHTML = services.map(service => {
       let serviceSlug = service.slug;
       if (slugMap[serviceSlug]) serviceSlug = slugMap[serviceSlug];
-      
-      // PRECIO: usa la nueva función getPrecioMostrar (con "Desde")
       const priceFormatted = getPrecioMostrar(service);
       const shortDesc = service.description ? 
         service.description.substring(0, 100) + (service.description.length > 100 ? '...' : '') : 
         'Solución digital profesional';
-      
       const imageHtml = service.image_url 
         ? `<img src="${escapeHtml(service.image_url)}" alt="${escapeHtml(service.title)}" class="serviceCard__image" loading="lazy">`
         : `<div class="serviceCard__icon">${service.icon || '📦'}</div>`;
-      
       return `
         <div class="serviceCard fade-in-up" data-service-url="servicio.html?tipo=${serviceSlug}">
           ${imageHtml}
@@ -1989,8 +2031,6 @@ async function loadServicesReal() {
         </div>
       `;
     }).join('');
-    
-    // Cards clickeables en toda el área
     document.querySelectorAll('.serviceCard').forEach(card => {
       const url = card.dataset.serviceUrl;
       if (url) {
@@ -2001,9 +2041,7 @@ async function loadServicesReal() {
         });
       }
     });
-    
-    console.log("✅ Servicios cargados con imágenes completas, cards clickeables y precios formateados con 'Desde'");
-    
+    console.log("✅ Servicios cargados");
   } catch(e) { 
     console.error("Error loading services:", e);
     container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2);">Error al cargar servicios</div>';
@@ -2014,16 +2052,13 @@ async function loadServicesReal() {
 async function loadBenefits() {
   const container = document.getElementById('benefitsGrid');
   if (!container) return;
-  
   container.innerHTML = '<div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div><div class="skeleton-card" style="height: 200px;"></div>';
-  
   try {
     const { data: benefitsData, error } = await sb
       .from('benefits')
       .select('*')
       .eq('active', true)
       .order('order_index', { ascending: true });
-    
     if (!error && benefitsData && benefitsData.length > 0) {
       container.innerHTML = benefitsData.map(b => `
         <div class="benefit-card fade-in-up">
@@ -2035,10 +2070,9 @@ async function loadBenefits() {
           <div class="benefit-card__desc">${escapeHtml(b.description || '')}</div>
         </div>
       `).join('');
-      console.log("✅ Beneficios cargados desde Supabase con imágenes");
+      console.log("✅ Beneficios cargados desde Supabase");
       return;
     }
-    
     const beneficios = [
       { icon: "🚀", title: "Aumentá tus ventas", description: "Convertí visitantes en clientes con estrategias digitales efectivas." },
       { icon: "⚡", title: "Ahorrá tiempo", description: "Automatizá procesos repetitivos y enfocate en lo que realmente importa." },
@@ -2049,7 +2083,6 @@ async function loadBenefits() {
       { icon: "📈", title: "Escalabilidad", description: "Tu sitio crece junto a tu negocio, sin necesidad de reinventarlo." },
       { icon: "🛡️", title: "Soporte dedicado", description: "Te acompañamos en cada paso, antes, durante y después del proyecto." }
     ];
-    
     container.innerHTML = beneficios.map(b => `
       <div class="benefit-card fade-in-up">
         <div class="benefit-card__icon">${b.icon}</div>
@@ -2058,7 +2091,6 @@ async function loadBenefits() {
       </div>
     `).join('');
     console.log("✅ Beneficios cargados desde fallback");
-    
   } catch(e) {
     console.error("Error loading benefits:", e);
     container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2);">Error al cargar beneficios</div>';
@@ -2075,37 +2107,29 @@ let touchEndX = 0;
 async function loadBannersCarousel() {
   const container = document.getElementById('bannerCarouselSlides');
   if (!container) return;
-  
   container.innerHTML = '<div class="banner-carousel-slide" style="text-align:center; padding:40px;">Cargando banners...</div>';
-  
   try {
     if (!sb) {
       console.error("❌ Supabase no inicializado");
       mostrarBannersFallbackCarousel();
       return;
     }
-    
     const { data: banners, error } = await sb
       .from('banners')
       .select('*')
       .eq('active', true)
       .order('order_index', { ascending: true });
-    
     if (error) throw error;
-    
     if (!banners || banners.length === 0) {
       console.log("⚠️ No hay banners activos");
       mostrarBannersFallbackCarousel();
       return;
     }
-    
     bannersData = banners;
-    console.log(`✅ ${bannersData.length} banners cargados para el carrusel`);
-    
+    console.log(`✅ ${bannersData.length} banners cargados`);
     renderBannerCarousel();
     iniciarCarruselAutomatico();
     setupSwipeBannerCarousel();
-    
   } catch(e) {
     console.error("❌ Error cargando banners:", e);
     mostrarBannersFallbackCarousel();
@@ -2116,16 +2140,13 @@ async function loadBannersCarousel() {
 function setupSwipeBannerCarousel() {
   const container = document.getElementById('bannerCarouselContainer');
   if (!container) return;
-  
   container.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
   }, { passive: true });
-  
   container.addEventListener('touchend', (e) => {
     touchEndX = e.changedTouches[0].screenX;
     const swipeDistance = touchStartX - touchEndX;
     const minSwipeDistance = 50;
-    
     if (Math.abs(swipeDistance) > minSwipeDistance) {
       if (swipeDistance > 0) {
         if (bannersData.length > 0) {
@@ -2152,15 +2173,13 @@ function renderBannerCarousel() {
   const slidesContainer = document.getElementById('bannerCarouselSlides');
   const dotsContainer = document.getElementById('bannerCarouselDots');
   if (!slidesContainer) return;
-  
   if (!bannersData.length) {
     mostrarBannersFallbackCarousel();
     return;
   }
-  
   slidesContainer.innerHTML = bannersData.map(banner => `
     <div class="banner-carousel-slide">
-      <img class="banner-carousel-image" src="${escapeHtml(banner.image_url)}" alt="${escapeHtml(banner.title || 'Banner promocional Ciborg 347')}" loading="lazy" width="800" height="450" />
+      <img class="banner-carousel-image" src="${escapeHtml(banner.image_url)}" alt="${escapeHtml(banner.title || 'Banner')}" loading="lazy" width="800" height="450" />
       <div class="banner-carousel-content">
         <h3>${escapeHtml(banner.title || 'Oferta especial')}</h3>
         <p>${escapeHtml(banner.description || '')}</p>
@@ -2168,12 +2187,10 @@ function renderBannerCarousel() {
       </div>
     </div>
   `).join('');
-  
   if (dotsContainer && bannersData.length > 1) {
     dotsContainer.innerHTML = bannersData.map((_, i) => `
       <span class="banner-dot ${i === currentBannerIndex ? 'active' : ''}" data-index="${i}" aria-label="Ir al banner ${i+1}"></span>
     `).join('');
-    
     document.querySelectorAll('.banner-dot').forEach(dot => {
       dot.addEventListener('click', (e) => {
         const index = parseInt(dot.dataset.index);
@@ -2185,18 +2202,14 @@ function renderBannerCarousel() {
       });
     });
   }
-  
   updateBannerCarousel();
 }
 
 function updateBannerCarousel() {
   const slidesContainer = document.getElementById('bannerCarouselSlides');
   const dots = document.querySelectorAll('.banner-dot');
-  
   if (!slidesContainer) return;
-  
   slidesContainer.style.transform = `translateX(-${currentBannerIndex * 100}%)`;
-  
   dots.forEach((dot, i) => {
     if (i === currentBannerIndex) {
       dot.classList.add('active');
@@ -2211,7 +2224,6 @@ function updateBannerCarousel() {
 function iniciarCarruselAutomatico() {
   if (bannerInterval) clearInterval(bannerInterval);
   if (bannersData.length <= 1) return;
-  
   bannerInterval = setInterval(() => {
     currentBannerIndex = (currentBannerIndex + 1) % bannersData.length;
     updateBannerCarousel();
@@ -2228,11 +2240,10 @@ function resetearCarruselAutomatico() {
 function mostrarBannersFallbackCarousel() {
   const slidesContainer = document.getElementById('bannerCarouselSlides');
   const dotsContainer = document.getElementById('bannerCarouselDots');
-  
   if (slidesContainer) {
     slidesContainer.innerHTML = `
       <div class="banner-carousel-slide">
-        <img class="banner-carousel-image" src="https://placehold.co/1200x600/1a1a2e/00d4ff?text=🚀+¿Tenés+una+idea?" alt="Banner promocional" loading="lazy" width="800" height="450" />
+        <img class="banner-carousel-image" src="https://placehold.co/1200x600/1a1a2e/00d4ff?text=🚀+¿Tenés+una+idea?" alt="Banner" loading="lazy" width="800" height="450" />
         <div class="banner-carousel-content">
           <h3>🚀 ¿Tenés una idea? ¡La hacemos realidad!</h3>
           <p>Asesoría gratuita de 30 min sin compromiso.</p>
@@ -2240,7 +2251,7 @@ function mostrarBannersFallbackCarousel() {
         </div>
       </div>
       <div class="banner-carousel-slide">
-        <img class="banner-carousel-image" src="https://placehold.co/1200x600/1a1a2e/8b5cf6?text=💡+Proyecto+a+medida" alt="Banner promocional" loading="lazy" width="800" height="450" />
+        <img class="banner-carousel-image" src="https://placehold.co/1200x600/1a1a2e/8b5cf6?text=💡+Proyecto+a+medida" alt="Banner" loading="lazy" width="800" height="450" />
         <div class="banner-carousel-content">
           <h3>💡 Proyecto a medida</h3>
           <p>Sin mensualidades. Primero trabajamos, después pagás.</p>
@@ -2249,13 +2260,11 @@ function mostrarBannersFallbackCarousel() {
       </div>
     `;
   }
-  
   if (dotsContainer) {
     dotsContainer.innerHTML = `
       <span class="banner-dot active" data-index="0" aria-label="Banner 1 activo"></span>
       <span class="banner-dot" data-index="1" aria-label="Ir al banner 2"></span>
     `;
-    
     document.querySelectorAll('.banner-dot').forEach(dot => {
       dot.addEventListener('click', (e) => {
         const index = parseInt(dot.dataset.index);
@@ -2267,7 +2276,6 @@ function mostrarBannersFallbackCarousel() {
       });
     });
   }
-  
   bannersData = [];
   currentBannerIndex = 0;
   updateBannerCarousel();
@@ -2294,7 +2302,7 @@ document.getElementById('bannerCarouselNext')?.addEventListener('click', () => {
   resetearCarruselAutomatico();
 });
 
-// ========== RESTO DEL CÓDIGO ORIGINAL (sin modificar) ==========
+// ========== RESTO DEL CÓDIGO ORIGINAL (marcas, casos de éxito, reseñas, etc.) ==========
 let brandsData = [];
 let currentBrandIndex = 0;
 let brandsPerPage = 4;
@@ -2303,33 +2311,26 @@ let brandsInterval = null;
 async function loadBrands() {
   const container = document.getElementById('brandsCarousel');
   if (!container) return;
-  
   container.innerHTML = '<div class="skeleton-card" style="height: 100px;"></div>';
-  
   try {
     const { data, error } = await sb
       .from('trusted_brands')
       .select('*')
       .eq('active', true)
       .order('order_index', { ascending: true });
-    
     if (error) throw error;
-    
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="text-align:center; color:var(--text2);">Próximamente marcas que confían en nosotros</div>';
       return;
     }
-    
     brandsData = data;
     updateBrandsPerPage();
     renderBrandsCarousel();
     startBrandsCarousel();
-    
     window.addEventListener('resize', () => {
       updateBrandsPerPage();
       renderBrandsCarousel();
     });
-    
   } catch(e) { console.error("Error loading brands:", e); }
 }
 
@@ -2342,11 +2343,9 @@ function updateBrandsPerPage() {
 function renderBrandsCarousel() {
   const container = document.getElementById('brandsCarousel');
   if (!container || !brandsData.length) return;
-  
   const start = currentBrandIndex;
   const end = Math.min(start + brandsPerPage, brandsData.length);
   const visibleBrands = brandsData.slice(start, end);
-  
   container.innerHTML = visibleBrands.map(brand => `
     <div class="brand-item">
       ${brand.website_url ? `<a href="${brand.website_url}" target="_blank" rel="noopener noreferrer">` : ''}
@@ -2360,7 +2359,6 @@ function renderBrandsCarousel() {
 function startBrandsCarousel() {
   if (brandsInterval) clearInterval(brandsInterval);
   if (brandsData.length <= brandsPerPage) return;
-  
   brandsInterval = setInterval(() => {
     if (currentBrandIndex + brandsPerPage >= brandsData.length) {
       currentBrandIndex = 0;
@@ -2404,23 +2402,18 @@ brandsSection?.addEventListener('mouseleave', startBrandsCarousel);
 async function loadSuccessStories() {
   const container = document.getElementById('storiesGrid');
   if (!container) return;
-  
   container.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
-  
   try {
     const { data, error } = await sb
       .from('success_stories')
       .select('*')
       .eq('active', true)
       .order('order_index', { ascending: true });
-    
     if (error) throw error;
-    
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2);">Próximamente más casos de éxito</div>';
       return;
     }
-    
     container.innerHTML = data.map(story => {
       let resultsHtml = '';
       if (story.results) {
@@ -2458,11 +2451,41 @@ function escapeHtml(str) {
   });
 }
 
-// ===== ROBOT FLOTANTE =====
+// ===== ROBOT FLOTANTE (MODIFICADO) =====
 const robotBtn = document.getElementById('robotHelpBtn');
 const robotImg = document.getElementById('robotImg');
 const robotBubble = document.getElementById('robotBubble');
+let robotEnlargeTimeout = null;
 
+// Estado inicial: chiquito (sin clase enlarged)
+robotBtn.classList.remove('enlarged');
+robotBtn.classList.add('shrink');
+
+function enlargeRobot() {
+  robotBtn.classList.add('enlarged');
+  robotBtn.classList.remove('shrink');
+  if (robotEnlargeTimeout) clearTimeout(robotEnlargeTimeout);
+  robotEnlargeTimeout = setTimeout(() => {
+    robotBtn.classList.remove('enlarged');
+    robotBtn.classList.add('shrink');
+  }, 5000);
+}
+
+function shrinkRobotPermanent() {
+  robotBtn.classList.remove('enlarged');
+  robotBtn.classList.add('shrink');
+  if (robotEnlargeTimeout) clearTimeout(robotEnlargeTimeout);
+}
+
+if (robotBtn) {
+  robotBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    enlargeRobot();
+    window.open('asistente.html', '_blank');
+  });
+}
+
+// ===== FUNCIONES ORIGINALES DEL ROBOT (secuencia, vibración, etc.) se mantienen =====
 const IMG1 = "https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/8f4b1793-1886-4dee-9445-b9570c2047ea.png";
 const IMG2 = "https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/a586d88b-93c0-4fac-b28d-4f5758af46f0.png";
 const IMG3 = "https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/ciborg%20sentado%20.png";
@@ -2487,18 +2510,13 @@ function showTemporaryBubble() {
   bubbleTimeout = setTimeout(() => hideBubble(), 2000);
 }
 
-function shrinkRobot() {
-  if (robotBtn && !robotBtn.classList.contains('shrink')) {
-    robotBtn.classList.add('shrink');
-  }
-}
-
 function startSequence() {
   if (sequenceTimeout) clearTimeout(sequenceTimeout);
   if (vibrationInterval) clearInterval(vibrationInterval);
   if (shrinkTimeout) clearTimeout(shrinkTimeout);
   
-  robotBtn.classList.remove('shrink');
+  robotBtn.classList.remove('enlarged');
+  robotBtn.classList.add('shrink');
   isInSequence = true;
   currentStep = 1;
   
@@ -2520,7 +2538,10 @@ function startSequence() {
       currentStep = 3;
       sequenceTimeout = null;
       
-      shrinkTimeout = setTimeout(() => shrinkRobot(), 5000);
+      shrinkTimeout = setTimeout(() => {
+        robotBtn.classList.add('shrink');
+        robotBtn.classList.remove('enlarged');
+      }, 5000);
       
       vibrationInterval = setInterval(() => {
         if (currentStep === 3 && robotBtn.classList.contains('show') && !isRobotHiddenByFooter) {
@@ -2554,8 +2575,11 @@ function setupRobotScroll() {
         } else if (currentStep === 3 && !isInSequence) {
           robotImg.src = IMG3;
           robotBtn.classList.add('neon-pulse');
-          if (!robotBtn.classList.contains('shrink') && !shrinkTimeout) {
-            shrinkTimeout = setTimeout(() => shrinkRobot(), 5000);
+          if (!shrinkTimeout) {
+            shrinkTimeout = setTimeout(() => {
+              robotBtn.classList.add('shrink');
+              robotBtn.classList.remove('enlarged');
+            }, 5000);
           }
           if (!vibrationInterval) {
             vibrationInterval = setInterval(() => {
@@ -2591,24 +2615,9 @@ function setupRobotScroll() {
   footerObserver.observe(footer);
 }
 
-if (robotBtn) {
-  robotBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    robotBtn.classList.remove('shrink');
-    if (currentStep === 3 && robotImg.src.includes('sentado')) resetSequence();
-    window.open('asistente.html', '_blank');
-    setTimeout(() => {
-      if (robotBtn && !robotBtn.matches(':hover')) shrinkRobot();
-    }, 3000);
-  });
-  
-  robotBtn.addEventListener('mouseleave', () => {
-    if (currentStep === 3 && !isInSequence) shrinkRobot();
-  });
-}
-
 setupRobotScroll();
 
+// ===== RESEÑAS =====
 let reviewsData = [];
 let currentReviewIndex = 0;
 let reviewsPerPage = 3;
@@ -2680,6 +2689,7 @@ async function loadFaqs() {
   } catch(e) { console.error("Error loadFaqs:", e); }
 }
 
+// ===== PROYECTOS =====
 let projectsData = [];
 let allCategories = [];
 let activeFilter = "all";
@@ -2737,12 +2747,124 @@ function typeWriter() {
 }
 setTimeout(typeWriter, 500);
 
+// ===== NUEVA FUNCIÓN openModal CON GALERÍA =====
 function openModal(project) {
-  const modalHTML = `<div class="modal-overlay" id="modalOverlay"><div class="modal-container"><div class="modal-header"><h3>${esc(project.title)}</h3><button class="modal-close" onclick="closeModal()" aria-label="Cerrar">×</button></div><div class="modal-body">${project.image_url ? `<img src="${esc(project.image_url)}" alt="${esc(project.title)}" class="modal-img" onclick="openLightbox('${esc(project.image_url)}')" loading="lazy" width="400" height="250" />` : ''}<div class="modal-cat">${esc(project.categories?.name || "Proyecto")}</div><div class="modal-desc">${esc(project.full_description || project.short_description || "Sin descripción adicional.")}</div><div class="modal-actions"><a href="${esc(project.demo_url || "#")}" target="_blank" rel="noopener noreferrer" class="btn btn--primary">Ver demo →</a><a href="${waUrl(`Hola, vi la demo "${project.title}" y quiero algo así.`)}" class="btn btn--wa">Consultar por WhatsApp</a></div></div></div></div>`;
+  // Obtener todas las imágenes del proyecto
+  const images = [];
+  if (project.image_url) images.push(project.image_url);
+  if (project.image2_url) images.push(project.image2_url);
+  // Preparado para más imágenes en el futuro (si hay image3_url, image4_url, etc.)
+  
+  let galleryHtml = '';
+  if (images.length === 0) {
+    galleryHtml = '<div class="gallery-main"><img class="gallery-main-img" src="https://placehold.co/800x450/1a1a2e/00d4ff?text=Sin+imagen" alt="Sin imagen"></div>';
+  } else if (images.length === 1) {
+    galleryHtml = `
+      <div class="gallery-container">
+        <div class="gallery-main">
+          <img class="gallery-main-img" src="${esc(images[0])}" alt="Imagen del proyecto" onclick="openLightbox('${esc(images[0])}')">
+        </div>
+      </div>
+    `;
+  } else {
+    // Múltiples imágenes: galería con navegación y miniaturas
+    galleryHtml = `
+      <div class="gallery-container">
+        <div class="gallery-main" id="galleryMain">
+          <img class="gallery-main-img" id="galleryMainImg" src="${esc(images[0])}" alt="Imagen del proyecto" onclick="openLightbox('${esc(images[0])}')">
+          <button class="gallery-nav-btn gallery-prev" id="galleryPrev">❮</button>
+          <button class="gallery-nav-btn gallery-next" id="galleryNext">❯</button>
+        </div>
+        <div class="gallery-thumbnails" id="galleryThumbnails">
+          ${images.map((img, idx) => `<img class="gallery-thumb ${idx === 0 ? 'active' : ''}" data-index="${idx}" src="${esc(img)}" alt="Miniatura ${idx+1}" onclick="setGalleryImage(${idx})">`).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  const modalHTML = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>${esc(project.title)}</h3>
+          <button class="modal-close" onclick="closeModal()" aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal-body">
+          ${galleryHtml}
+          <div class="modal-cat">${esc(project.categories?.name || "Proyecto")}</div>
+          <div class="modal-desc">${esc(project.full_description || project.short_description || "Sin descripción adicional.")}</div>
+          <div class="modal-actions">
+            <a href="${esc(project.demo_url || "#")}" target="_blank" rel="noopener noreferrer" class="btn btn--primary">Ver demo →</a>
+            <a href="${waUrl(`Hola, vi la demo "${project.title}" y quiero algo así.`)}" class="btn btn--wa">Consultar por WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
   document.body.insertAdjacentHTML("beforeend", modalHTML);
   document.body.style.overflow = "hidden";
+  
+  // Configurar galería si hay múltiples imágenes
+  if (images.length > 1) {
+    let currentIndex = 0;
+    const mainImg = document.getElementById('galleryMainImg');
+    const prevBtn = document.getElementById('galleryPrev');
+    const nextBtn = document.getElementById('galleryNext');
+    const thumbnails = document.querySelectorAll('.gallery-thumb');
+    
+    function updateGallery(index) {
+      currentIndex = index;
+      mainImg.src = images[currentIndex];
+      mainImg.onclick = () => openLightbox(images[currentIndex]);
+      thumbnails.forEach((thumb, i) => {
+        if (i === currentIndex) thumb.classList.add('active');
+        else thumb.classList.remove('active');
+      });
+    }
+    
+    function nextImage() {
+      currentIndex = (currentIndex + 1) % images.length;
+      updateGallery(currentIndex);
+    }
+    
+    function prevImage() {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      updateGallery(currentIndex);
+    }
+    
+    prevBtn.onclick = (e) => { e.stopPropagation(); prevImage(); };
+    nextBtn.onclick = (e) => { e.stopPropagation(); nextImage(); };
+    
+    // Swipe táctil
+    const galleryContainer = document.getElementById('galleryMain');
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    galleryContainer.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    galleryContainer.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const swipeDistance = touchStartX - touchEndX;
+      const minSwipeDistance = 50;
+      if (Math.abs(swipeDistance) > minSwipeDistance) {
+        if (swipeDistance > 0) nextImage();
+        else prevImage();
+      }
+    }, { passive: true });
+    
+    window.setGalleryImage = function(index) {
+      updateGallery(index);
+    };
+  }
 }
-window.closeModal = function() { const modal = document.getElementById("modalOverlay"); if (modal) modal.remove(); document.body.style.overflow = ""; }
+
+window.closeModal = function() { 
+  const modal = document.getElementById("modalOverlay"); 
+  if (modal) modal.remove(); 
+  document.body.style.overflow = ""; 
+}
 
 function renderFeatured() {
   const featuredProjects = projectsData.filter(p => p.featured === true);
