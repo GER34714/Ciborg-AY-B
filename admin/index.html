@@ -91,7 +91,7 @@
       display: none;
     }
 
-    /* Topbar */
+    /* Topbar con logo - z-index alto para que no lo tape el menú */
     .topbar {
       background: var(--bg2);
       padding: 15px 20px;
@@ -103,6 +103,8 @@
       flex-wrap: wrap;
       gap: 12px;
       border: 1px solid var(--border);
+      position: relative;
+      z-index: 101;
     }
 
     .topbar-left {
@@ -110,6 +112,31 @@
       align-items: center;
       gap: 20px;
       flex-wrap: wrap;
+    }
+
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 102;
+    }
+
+    .admin-logo-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
+    .admin-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .topbar-right {
@@ -147,7 +174,7 @@
       cursor: pointer;
     }
 
-    /* Sidebar Toggle */
+    /* Sidebar Toggle - no tapa el logo */
     .sidebar-toggle {
       display: none;
       position: fixed;
@@ -290,6 +317,19 @@
       font-weight: bold;
       font-size: 16px;
       margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .custom-badge-display {
+      background: var(--cyan);
+      color: var(--white);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
     }
 
     .item-meta {
@@ -370,6 +410,16 @@
     .btn-success {
       background: var(--success);
       color: white;
+    }
+
+    .btn-featured {
+      background: var(--cyan);
+      color: white;
+    }
+    .btn-unfeatured {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
     }
 
     .btn-upload {
@@ -668,7 +718,50 @@
       flex: 2;
     }
 
-    /* Mejora para móvil: sidebar no tapa el contenido */
+    /* Toggle switch para destacados */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--bg3);
+      border: 1px solid var(--border);
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 2px;
+      background-color: var(--text2);
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+      background-color: var(--cyan);
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+      background-color: white;
+    }
+
+    /* Mejora para móvil: sidebar no tapa el logo ni el contenido */
     @media (max-width: 768px) {
       .sidebar-toggle {
         display: block;
@@ -687,7 +780,7 @@
         border-radius: 0;
         overflow-y: auto;
         background: var(--bg2);
-        padding-top: 70px;
+        padding-top: 80px;
       }
       .sidebar.open {
         transform: translateX(0);
@@ -723,6 +816,13 @@
       .modal-tabs {
         flex-wrap: wrap;
       }
+      .admin-logo-text {
+        font-size: 14px;
+      }
+      .admin-logo-img {
+        width: 32px;
+        height: 32px;
+      }
     }
   </style>
 </head>
@@ -744,7 +844,10 @@
   <div id="adminPanel" class="admin-panel">
     <div class="topbar">
       <div class="topbar-left">
-        <h2>🤖 CIBORG 347 | Admin</h2>
+        <div class="admin-logo">
+          <img class="admin-logo-img" src="https://fhxcumwhgtfirznnznjx.supabase.co/storage/v1/object/public/Imagenes/fETkPEv.md.png" alt="Logo Ciborg 347">
+          <span class="admin-logo-text">CIBORG 347 | ADMIN</span>
+        </div>
         <a href="https://ciborg347.onrender.com" target="_blank" class="btn-home">🔙 Volver al inicio</a>
         <button id="themeToggleBtn" class="theme-toggle">🌙 Modo oscuro</button>
       </div>
@@ -764,7 +867,7 @@
         <button class="nav-btn" data-view="categories">📂 Categorías</button>
         <button class="nav-btn" data-view="brands">🏷️ Marcas</button>
         <button class="nav-btn" data-view="banners">📢 Banners</button>
-        <button class="nav-btn" data-view="featured">⭐ Destacados</button>
+        <button class="nav-btn" data-view="manageFeatured">⭐ Gestionar Destacados (Frontend)</button>
 
         <h3>💼 Negocio</h3>
         <button class="nav-btn" data-view="services">💰 Servicios</button>
@@ -793,7 +896,7 @@
           <div id="recentProjects" class="items-list"></div>
         </div>
 
-        <!-- Proyectos CON BUSCADOR y DOS IMÁGENES -->
+        <!-- Proyectos CON BUSCADOR, DOS IMÁGENES y CUSTOM BADGE -->
         <div id="projectsPanel" class="panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2>📁 Proyectos</h2>
@@ -846,7 +949,7 @@
           <div id="internalDataPagination" class="pagination-container"></div>
         </div>
 
-        <!-- Servicios -->
+        <!-- Servicios CON MULTIPLES MONEDAS (carga desde Supabase) -->
         <div id="servicesPanel" class="panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2>💰 Servicios</h2>
@@ -866,14 +969,14 @@
           <div id="storiesPagination" class="pagination-container"></div>
         </div>
 
-        <!-- Destacados CON PAGINACIÓN -->
-        <div id="featuredPanel" class="panel">
+        <!-- GESTIONAR DESTACADOS (todos los proyectos con toggle) -->
+        <div id="manageFeaturedPanel" class="panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-            <h2>⭐ Proyectos destacados</h2>
-            <p style="color: var(--text2); font-size: 12px;">Seleccioná qué proyectos quieres destacar en el inicio.</p>
+            <h2>⭐ Gestionar Proyectos Destacados (Frontend)</h2>
+            <p style="color: var(--text2); font-size: 12px;">Activá el toggle para que el proyecto aparezca en la sección "Destacados" del inicio.</p>
           </div>
-          <div id="featuredList" class="items-list"></div>
-          <div id="featuredPagination" class="pagination-container"></div>
+          <div id="manageFeaturedList" class="items-list"></div>
+          <div id="manageFeaturedPagination" class="pagination-container"></div>
         </div>
 
         <!-- Categorías CON PAGINACIÓN -->
@@ -1010,7 +1113,7 @@
 
 <!-- ==================== MODALES ==================== -->
 
-<!-- Modal Servicios -->
+<!-- Modal Servicios CON MULTIPLES MONEDAS -->
 <div id="serviceModal" class="modal">
   <div class="modal-content">
     <h3 id="serviceModalTitle">💼 Nuevo Servicio</h3>
@@ -1020,16 +1123,19 @@
       <div><label>Slug</label><input type="text" id="serviceSlug" placeholder="ej: tienda-online"></div>
     </div>
     <div class="form-row">
-      <div><label>💰 Precio</label><input type="text" id="servicePrice" placeholder="Ej: $700.000"></div>
-      <div><label>🔢 Orden</label><input type="number" id="serviceOrder" value="0"></div>
+      <div><label>💰 Precio ARS (número)</label><input type="number" id="servicePriceArs" placeholder="Ej: 700000" step="1"></div>
+      <div><label>💵 Precio USD (número)</label><input type="number" id="servicePriceUsd" placeholder="Ej: 590" step="1"></div>
     </div>
-    <label>🖼️ Imagen de portada</label>
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-      <input type="url" id="serviceImageUrl" placeholder="https://..." style="flex:1;" onchange="previewServiceImage()">
-      <button type="button" class="btn-upload" onclick="document.getElementById('serviceImageFile').click()">📁 Subir</button>
+    <div class="form-row">
+      <div><label>🖼️ Imagen de portada</label><input type="url" id="serviceImageUrl" placeholder="https://..." onchange="previewServiceImage()"></div>
+      <div><button type="button" class="btn-upload" onclick="document.getElementById('serviceImageFile').click()">📁 Subir</button></div>
       <input type="file" id="serviceImageFile" accept="image/*" style="display:none;" onchange="uploadImage('serviceImageUrl', this.files[0], 'serviceImagePreview')">
     </div>
     <img id="serviceImagePreview" class="image-preview" style="display: none;">
+    <div class="form-row">
+      <div><label>🔢 Orden</label><input type="number" id="serviceOrder" value="0"></div>
+      <div><label style="display: flex; align-items: center; gap: 10px; margin-top: 8px;"><input type="checkbox" id="serviceShowUsd"> Mostrar USD en el front (futuro)</label></div>
+    </div>
     <label>📝 Descripción</label>
     <textarea id="serviceDescription" rows="3" placeholder="Descripción completa del servicio..."></textarea>
     <label>✅ Características (separadas por coma)</label>
@@ -1044,7 +1150,7 @@
   </div>
 </div>
 
-<!-- Modal Proyectos CON DOS IMÁGENES Y SELECTOR DE IMAGEN PRINCIPAL -->
+<!-- Modal Proyectos CON DOS IMÁGENES, SELECTOR DE IMAGEN PRINCIPAL y CUSTOM BADGE -->
 <div id="projectModal" class="modal">
   <div class="modal-content">
     <h3 id="projectModalTitle">📁 Nuevo Proyecto</h3>
@@ -1085,6 +1191,11 @@
       <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
         <input type="radio" name="mainImage" value="image2" id="mainImage2"> Imagen 2
       </label>
+    </div>
+    
+    <!-- CUSTOM BADGE -->
+    <div class="form-row">
+      <div><label>🏷️ Badge personalizado (opcional)</label><input type="text" id="projectCustomBadge" placeholder="Ej: Nuevo, Oferta, Recomendado" maxlength="30"></div>
     </div>
     
     <label>📝 Descripción corta</label>
@@ -1379,7 +1490,7 @@ let projectVersions = [];
 
 // Paginación
 let itemsPerPage = 10;
-let projectsPage = 1, servicesPage = 1, storiesPage = 1, leadsPage = 1, benefitsPage = 1, bannersPage = 1, approvedReviewsPage = 1, internalDataPage = 1, versionsPage = 1, categoriesPage = 1, featuredPage = 1;
+let projectsPage = 1, servicesPage = 1, storiesPage = 1, leadsPage = 1, benefitsPage = 1, bannersPage = 1, approvedReviewsPage = 1, internalDataPage = 1, versionsPage = 1, categoriesPage = 1, manageFeaturedPage = 1;
 
 // Variables para búsqueda de proyectos
 let projectSearchFilters = {
@@ -1499,11 +1610,35 @@ function previewBenefitImage() {
 }
 
 // ============================================================
-// FUNCIONES PREVIEW PARA SEGUNDA IMAGEN DEL PROYECTO
+// FUNCIONES PREVIEW
 // ============================================================
+function previewServiceImage() { 
+  const url = document.getElementById('serviceImageUrl').value; 
+  const preview = document.getElementById('serviceImagePreview'); 
+  if (url) { preview.src = url; preview.style.display = 'block'; } 
+  else preview.style.display = 'none'; 
+}
+function previewProjectImage() { 
+  const url = document.getElementById('projectImageUrl').value; 
+  const preview = document.getElementById('projectImagePreview'); 
+  if (url) { preview.src = url; preview.style.display = 'block'; } 
+  else preview.style.display = 'none'; 
+}
 function previewProjectImage2() { 
   const url = document.getElementById('projectImage2Url').value; 
   const preview = document.getElementById('projectImage2Preview'); 
+  if (url) { preview.src = url; preview.style.display = 'block'; } 
+  else preview.style.display = 'none'; 
+}
+function previewBannerImage() { 
+  const url = document.getElementById('bannerImageUrl').value; 
+  const preview = document.getElementById('bannerImagePreview'); 
+  if (url) { preview.src = url; preview.style.display = 'block'; } 
+  else preview.style.display = 'none'; 
+}
+function previewStoryImage() { 
+  const url = document.getElementById('storyImageUrl').value; 
+  const preview = document.getElementById('storyImagePreview'); 
   if (url) { preview.src = url; preview.style.display = 'block'; } 
   else preview.style.display = 'none'; 
 }
@@ -1637,6 +1772,7 @@ async function restoreProjectVersion(versionId) {
         status: snapshot.status,
         order_index: snapshot.order_index,
         active: snapshot.active,
+        custom_badge: snapshot.custom_badge,
         client_name: snapshot.client_name,
         admin_panel_url: snapshot.admin_panel_url,
         service_type: snapshot.service_type,
@@ -1768,7 +1904,7 @@ const panelMap = {
   internalData: 'internalDataPanel',
   services: 'servicesPanel',
   'success-stories': 'successStoriesPanel',
-  featured: 'featuredPanel',
+  manageFeatured: 'manageFeaturedPanel',
   categories: 'categoriesPanel',
   brands: 'brandsPanel',
   benefits: 'benefitsPanel',
@@ -1794,7 +1930,7 @@ navBtns.forEach(btn => {
     if (view === 'projects') loadProjects();
     if (view === 'internalData') loadInternalData();
     if (view === 'success-stories') loadStories();
-    if (view === 'featured') loadFeaturedProjects();
+    if (view === 'manageFeatured') loadManageFeatured();
     if (view === 'categories') loadCategories();
     if (view === 'brands') loadBrands();
     if (view === 'benefits') loadBenefits();
@@ -1816,31 +1952,6 @@ navBtns.forEach(btn => {
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 function formatDate(d) { return d ? new Date(d).toLocaleString('es-AR') : ''; }
 function formatDateOnly(d) { return d ? new Date(d).toLocaleDateString('es-AR') : ''; }
-
-function previewServiceImage() { 
-  const url = document.getElementById('serviceImageUrl').value; 
-  const preview = document.getElementById('serviceImagePreview'); 
-  if (url) { preview.src = url; preview.style.display = 'block'; } 
-  else preview.style.display = 'none'; 
-}
-function previewProjectImage() { 
-  const url = document.getElementById('projectImageUrl').value; 
-  const preview = document.getElementById('projectImagePreview'); 
-  if (url) { preview.src = url; preview.style.display = 'block'; } 
-  else preview.style.display = 'none'; 
-}
-function previewBannerImage() { 
-  const url = document.getElementById('bannerImageUrl').value; 
-  const preview = document.getElementById('bannerImagePreview'); 
-  if (url) { preview.src = url; preview.style.display = 'block'; } 
-  else preview.style.display = 'none'; 
-}
-function previewStoryImage() { 
-  const url = document.getElementById('storyImageUrl').value; 
-  const preview = document.getElementById('storyImagePreview'); 
-  if (url) { preview.src = url; preview.style.display = 'block'; } 
-  else preview.style.display = 'none'; 
-}
 
 function getStatusBadge(status) {
   const badges = {
@@ -1928,7 +2039,7 @@ async function loadDashboard() {
 }
 
 // ============================================================
-// SERVICIOS
+// SERVICIOS CON MULTIPLES MONEDAS (carga desde Supabase)
 // ============================================================
 async function loadServices() {
   const container = document.getElementById('servicesList');
@@ -1939,7 +2050,7 @@ async function loadServices() {
   const start = (servicesPage - 1) * itemsPerPage;
   const paginated = services.slice(start, start + itemsPerPage);
   if (services.length === 0) { container.innerHTML = '<div class="loading">No hay servicios. Creá uno nuevo.</div>'; return; }
-  container.innerHTML = paginated.map(service => `<div class="item-card">${service.image_url ? `<img src="${escapeHtml(service.image_url)}" class="item-preview" onerror="this.style.display='none'">` : ''}<div class="item-info"><div class="item-title">${escapeHtml(service.title)}</div><div class="item-meta">💰 ${escapeHtml(service.price || 'Sin precio')} · 🔗 ${escapeHtml(service.slug)} · ${service.active ? '🟢 Activo' : '🔴 Inactivo'}</div></div><div class="item-actions"><button class="btn-edit" onclick="openServiceModal('${service.id}')">✏️ Editar</button><button class="btn-delete" onclick="deleteService('${service.id}')">🗑️ Eliminar</button></div></div>`).join('');
+  container.innerHTML = paginated.map(service => `<div class="item-card">${service.image_url ? `<img src="${escapeHtml(service.image_url)}" class="item-preview" onerror="this.style.display='none'">` : ''}<div class="item-info"><div class="item-title">${escapeHtml(service.title)}</div><div class="item-meta">💰 ARS: ${service.price_ars ? `$${new Intl.NumberFormat('es-AR').format(service.price_ars)}` : 'No definido'} · 💵 USD: ${service.price_usd ? `$${service.price_usd}` : 'No definido'} · ${service.active ? '🟢 Activo' : '🔴 Inactivo'} ${service.show_usd ? '· 🌐 Mostrar USD' : ''}</div></div><div class="item-actions"><button class="btn-edit" onclick="openServiceModal('${service.id}')">✏️ Editar</button><button class="btn-delete" onclick="deleteService('${service.id}')">🗑️ Eliminar</button></div></div>`).join('');
   renderPagination('servicesPagination', services.length, servicesPage, (page) => { servicesPage = page; loadServices(); });
 }
 
@@ -1952,12 +2063,14 @@ window.openServiceModal = function(id = null) {
     if (service) {
       document.getElementById('serviceTitle').value = service.title || '';
       document.getElementById('serviceSlug').value = service.slug || '';
-      document.getElementById('servicePrice').value = service.price || '';
+      document.getElementById('servicePriceArs').value = service.price_ars || '';
+      document.getElementById('servicePriceUsd').value = service.price_usd || '';
       document.getElementById('serviceImageUrl').value = service.image_url || '';
       document.getElementById('serviceDescription').value = service.description || '';
       document.getElementById('serviceFeatures').value = (service.features || []).join(', ');
       document.getElementById('serviceOrder').value = service.order_index || 0;
       document.getElementById('serviceActive').checked = service.active !== false;
+      document.getElementById('serviceShowUsd').checked = service.show_usd === true;
       if (service.image_url) {
         document.getElementById('serviceImagePreview').src = service.image_url;
         document.getElementById('serviceImagePreview').style.display = 'block';
@@ -1966,12 +2079,14 @@ window.openServiceModal = function(id = null) {
   } else {
     document.getElementById('serviceTitle').value = '';
     document.getElementById('serviceSlug').value = '';
-    document.getElementById('servicePrice').value = '';
+    document.getElementById('servicePriceArs').value = '';
+    document.getElementById('servicePriceUsd').value = '';
     document.getElementById('serviceImageUrl').value = '';
     document.getElementById('serviceDescription').value = '';
     document.getElementById('serviceFeatures').value = '';
     document.getElementById('serviceOrder').value = '0';
     document.getElementById('serviceActive').checked = true;
+    document.getElementById('serviceShowUsd').checked = false;
     document.getElementById('serviceImagePreview').style.display = 'none';
   }
   modal.style.display = 'flex';
@@ -1985,7 +2100,9 @@ window.saveService = async function() {
   const payload = {
     title: title,
     slug: slug,
-    price: document.getElementById('servicePrice').value,
+    price_ars: document.getElementById('servicePriceArs').value ? parseFloat(document.getElementById('servicePriceArs').value) : null,
+    price_usd: document.getElementById('servicePriceUsd').value ? parseFloat(document.getElementById('servicePriceUsd').value) : null,
+    show_usd: document.getElementById('serviceShowUsd').checked,
     image_url: document.getElementById('serviceImageUrl').value,
     description: document.getElementById('serviceDescription').value,
     features: features,
@@ -2002,9 +2119,8 @@ window.saveService = async function() {
 window.deleteService = async function(id) { if(confirm('¿Eliminar este servicio?')){ await sb.from('services').delete().eq('id',id); loadServices(); loadDashboard(); } }
 
 // ============================================================
-// PROYECTOS CON BÚSQUEDA AVANZADA Y DOS IMÁGENES
+// PROYECTOS CON BÚSQUEDA AVANZADA, DOS IMÁGENES y CUSTOM BADGE
 // ============================================================
-
 async function loadProjectSearchCategories() {
   const select = document.getElementById('projectSearchCategory');
   if (!select) return;
@@ -2063,7 +2179,10 @@ async function loadProjects() {
     <div class="item-card">
       ${project.image_url ? `<img src="${escapeHtml(project.image_url)}" class="item-preview" onerror="this.style.display='none'">` : ''}
       <div class="item-info">
-        <div class="item-title">${escapeHtml(project.title)}</div>
+        <div class="item-title">
+          ${escapeHtml(project.title)}
+          ${project.custom_badge ? `<span class="custom-badge-display">${escapeHtml(project.custom_badge)}</span>` : ''}
+        </div>
         <div class="item-meta">
           📁 ${escapeHtml(project.categories?.name || 'Sin categoría')} · 
           ${getStatusBadge(project.status)} 
@@ -2145,6 +2264,7 @@ window.openProjectModal = async function(id = null) {
       document.getElementById('projectStatus').value = project.status || 'published';
       document.getElementById('projectOrder').value = project.order_index || 0;
       document.getElementById('projectActive').checked = project.active !== false;
+      document.getElementById('projectCustomBadge').value = project.custom_badge || '';
       
       // Cargar main_image
       if (project.main_image === 'image2') {
@@ -2172,6 +2292,7 @@ window.openProjectModal = async function(id = null) {
     document.getElementById('projectOrder').value = '0';
     document.getElementById('projectActive').checked = true;
     document.getElementById('mainImage1').checked = true;
+    document.getElementById('projectCustomBadge').value = '';
   }
   modal.style.display = 'flex';
 }
@@ -2198,6 +2319,7 @@ window.saveProject = async function() {
     status: document.getElementById('projectStatus').value,
     order_index: parseInt(document.getElementById('projectOrder').value) || 0,
     active: document.getElementById('projectActive').checked,
+    custom_badge: document.getElementById('projectCustomBadge').value || null,
     updated_at: new Date().toISOString()
   };
   if (!payload.title) return alert('El título es obligatorio');
@@ -2214,7 +2336,8 @@ window.saveProject = async function() {
       demo_url: oldProject.demo_url,
       image_url: oldProject.image_url,
       image2_url: oldProject.image2_url,
-      main_image: oldProject.main_image
+      main_image: oldProject.main_image,
+      custom_badge: oldProject.custom_badge
     };
   }
   await saveProjectVersion(projectId, id ? 'update' : 'create', snapshot, id ? 'Actualización de proyecto' : 'Creación de proyecto');
@@ -2234,6 +2357,71 @@ window.deleteProject = async function(id) {
     loadDashboard();
     loadInternalData();
   } 
+}
+
+// ============================================================
+// GESTIONAR DESTACADOS (todos los proyectos con toggle)
+// ============================================================
+async function loadManageFeatured() {
+  const container = document.getElementById('manageFeaturedList');
+  container.innerHTML = '<div class="loading">Cargando proyectos...</div>';
+  
+  const { data, error } = await sb.from('projects').select('id, title, featured, status').order('title', { ascending: true });
+  if (error) { 
+    container.innerHTML = `<div class="msg msg-error">Error: ${error.message}</div>`; 
+    return; 
+  }
+  
+  const projectsData = data || [];
+  const start = (manageFeaturedPage - 1) * itemsPerPage;
+  const paginated = projectsData.slice(start, start + itemsPerPage);
+  
+  if (projectsData.length === 0) { 
+    container.innerHTML = '<div class="loading">No hay proyectos para gestionar.</div>'; 
+    return; 
+  }
+  
+  container.innerHTML = paginated.map(project => `
+    <div class="item-card">
+      <div class="item-info">
+        <div class="item-title">
+          ${escapeHtml(project.title)}
+          <span class="badge ${project.featured ? 'badge-featured' : 'badge-draft'}">${project.featured ? '⭐ Destacado' : '📌 No destacado'}</span>
+        </div>
+        <div class="item-meta">Estado: ${getStatusBadge(project.status)}</div>
+      </div>
+      <div class="item-actions">
+        <label class="toggle-switch">
+          <input type="checkbox" ${project.featured ? 'checked' : ''} onchange="toggleFeaturedFromManage('${project.id}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size: 12px; color: var(--text2);">${project.featured ? 'Destacado' : 'No destacado'}</span>
+      </div>
+    </div>
+  `).join('');
+  
+  renderPagination('manageFeaturedPagination', projectsData.length, manageFeaturedPage, (page) => { 
+    manageFeaturedPage = page; 
+    loadManageFeatured(); 
+  });
+}
+
+async function toggleFeaturedFromManage(id, featured) {
+  const { data: oldProject } = await sb.from('projects').select('*').eq('id', id).single();
+  const { error } = await sb.from('projects').update({ 
+    featured, 
+    status: featured ? 'featured' : (oldProject.status === 'featured' ? 'published' : oldProject.status),
+    updated_at: new Date().toISOString() 
+  }).eq('id', id);
+  
+  if (error) {
+    alert('Error: ' + error.message);
+  } else { 
+    const snapshot = { id, featured, old_values: { featured: oldProject.featured } };
+    await saveProjectVersion(id, 'update', snapshot, featured ? 'Proyecto destacado' : 'Destacado removido');
+    loadManageFeatured(); 
+    loadProjects(); 
+  }
 }
 
 // ============================================================
@@ -2985,55 +3173,6 @@ window.saveFaq = async function() {
 window.deleteFaq = async function(id) { if(confirm('¿Eliminar esta FAQ?')){ await sb.from('faqs').delete().eq('id',id); loadFaqs(); loadDashboard(); } }
 
 // ============================================================
-// DESTACADOS CON PAGINACIÓN
-// ============================================================
-async function loadFeaturedProjects() {
-  const container = document.getElementById('featuredList');
-  container.innerHTML = '<div class="loading">Cargando proyectos destacados...</div>';
-  const { data, error } = await sb.from('projects').select('*').eq('featured', true).order('created_at', { ascending: false });
-  if (error) { container.innerHTML = `<div class="msg msg-error">Error: ${error.message}</div>`; return; }
-  const featuredProjectsData = data || [];
-  
-  const start = (featuredPage - 1) * itemsPerPage;
-  const paginated = featuredProjectsData.slice(start, start + itemsPerPage);
-  
-  if (featuredProjectsData.length === 0) { 
-    container.innerHTML = '<div class="loading">No hay proyectos destacados. Marcá alguno como destacado en la sección "Proyectos".</div>'; 
-    document.getElementById('featuredPagination').style.display = 'none';
-    return; 
-  }
-  
-  container.innerHTML = paginated.map(project => `
-    <div class="item-card">
-      <div class="item-info">
-        <div class="item-title">${escapeHtml(project.title)}</div>
-        <div class="item-meta">${getStatusBadge(project.status)} · ${project.created_at ? formatDate(project.created_at) : ''}</div>
-      </div>
-      <div class="item-actions">
-        <button class="btn-warning" onclick="toggleFeatured('${project.id}', false)">⭐ Quitar destacado</button>
-      </div>
-    </div>
-  `).join('');
-  
-  renderPagination('featuredPagination', featuredProjectsData.length, featuredPage, (page) => { 
-    featuredPage = page; 
-    loadFeaturedProjects(); 
-  });
-}
-
-async function toggleFeatured(id, featured) {
-  const { data: oldProject } = await sb.from('projects').select('*').eq('id', id).single();
-  const { error } = await sb.from('projects').update({ featured, status: featured ? 'featured' : oldProject.status === 'featured' ? 'published' : oldProject.status, updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) alert('Error: ' + error.message);
-  else { 
-    const snapshot = { id, featured, old_values: { featured: oldProject.featured } };
-    await saveProjectVersion(id, 'update', snapshot, featured ? 'Proyecto destacado' : 'Destacado removido');
-    loadFeaturedProjects(); 
-    loadProjects(); 
-  }
-}
-
-// ============================================================
 // HISTORIAL
 // ============================================================
 async function loadHistory() {
@@ -3115,7 +3254,6 @@ window.previewBenefitImage = previewBenefitImage;
 window.approveReview = approveReview;
 window.rejectReview = rejectReview;
 window.deleteApprovedReview = deleteApprovedReview;
-window.toggleFeatured = toggleFeatured;
 window.uploadImage = uploadImage;
 window.openInternalDataModal = openInternalDataModal;
 window.loadVersions = loadVersions;
@@ -3124,6 +3262,7 @@ window.addDynamicField = addDynamicField;
 window.removeDynamicField = removeDynamicField;
 window.updateDynamicFieldKey = updateDynamicFieldKey;
 window.updateDynamicFieldValue = updateDynamicFieldValue;
+window.toggleFeaturedFromManage = toggleFeaturedFromManage;
 
 async function loadAllData() {
   await loadDashboard();
